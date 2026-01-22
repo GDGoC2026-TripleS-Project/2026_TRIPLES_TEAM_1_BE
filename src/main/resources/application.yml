@@ -13,3 +13,7 @@ spring:
         show_sql: true
         format_sql: false
     open-in-view: false
+
+springdoc:
+  swagger-ui:
+    path: /
