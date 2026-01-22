@@ -4,7 +4,7 @@
 FROM eclipse-temurin:21-jdk
 
 # 인자 설정 부분과 jar 파일 복제 부분 합쳐서 진행해도 무방
-COPY build/libs/*.jar app.jar
+COPY app.jar app.jar
 
 # 실행 명령어
 ENTRYPOINT ["java", "-jar", "app.jar", "--server.address=0.0.0.0"]
