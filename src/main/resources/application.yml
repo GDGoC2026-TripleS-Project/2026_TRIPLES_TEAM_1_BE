@@ -25,6 +25,5 @@ app:
       client-id: ${GOOGLE_CLIENT_ID}
       client-secret: ${GOOGLE_CLIENT_SECRET}
       redirect-uri: http://localhost:8080/oauth2/callback/google
-      auth-uri: https://accounts.google.com/o/oauth2/v2/auth
-      token-uri: https://oauth2.googleapis.com/token
-      userinfo-uri: https://openidconnect.googleapis.com/v1/userinfo
+      scope: "openid email profile"
+    frontend-redirect-url: https://www.naver.com # 임시

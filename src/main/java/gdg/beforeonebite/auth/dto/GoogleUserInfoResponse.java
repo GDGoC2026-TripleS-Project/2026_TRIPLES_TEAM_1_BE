@@ -1,6 +1,6 @@
 package gdg.beforeonebite.auth.dto;
 
-public record GoogleUserInfo(
+public record GoogleUserInfoResponse (
         String sub,
         String email,
         String name
