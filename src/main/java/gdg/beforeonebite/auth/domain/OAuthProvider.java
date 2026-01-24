@@ -1,4 +1,4 @@
-package gdg.beforeonebite.oauth.domain;
+package gdg.beforeonebite.auth.domain;
 
 public enum OAuthProvider {
     GOOGLE,
