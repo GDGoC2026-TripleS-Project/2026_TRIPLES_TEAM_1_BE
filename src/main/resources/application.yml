@@ -27,3 +27,7 @@ app:
       redirect-uri: http://localhost:8080/oauth2/callback/google
       scope: "openid email profile"
     frontend-redirect-url: https://www.naver.com # 임시
+
+springdoc:
+  swagger-ui:
+    path: /
