@@ -10,7 +10,7 @@ public class CookieUtil {
     private static final String OAUTH_STATE = "OAUTH_STATE";
     private static final int STATE_MAX_AGE_SECONDS = 300;
 
-    private static final String REFRESH_TOKEN = "refresh_token";
+    private static final String REFRESH_TOKEN = "sid";
 
     public static void setOAuthState(HttpServletResponse response, String state, boolean secure) {
         ResponseCookie cookie = ResponseCookie.from(OAUTH_STATE, state)
