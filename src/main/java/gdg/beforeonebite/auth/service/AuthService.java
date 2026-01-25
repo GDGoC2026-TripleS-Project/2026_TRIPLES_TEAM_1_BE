@@ -1,6 +1,7 @@
 package gdg.beforeonebite.auth.service;
 
 import gdg.beforeonebite.auth.dto.TokenReissueResult;
+import gdg.beforeonebite.auth.exception.BadRequestException;
 import gdg.beforeonebite.auth.exception.ErrorMessage;
 import gdg.beforeonebite.auth.exception.UnauthorizedException;
 import gdg.beforeonebite.auth.jwt.TokenProvider;
@@ -26,7 +27,7 @@ public class AuthService {
         Long userId = tokenProvider.getUserIdFromRefreshToken(refreshToken);
 
         if (!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("USER_NOT_FOUND");
+            throw new UnauthorizedException(ErrorMessage.INVALID_SESSION);
         }
 
         String newAccess = tokenProvider.createAccessToken(userId, DEFAULT_ROLE);

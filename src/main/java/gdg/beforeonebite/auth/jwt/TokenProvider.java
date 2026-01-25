@@ -3,6 +3,7 @@ package gdg.beforeonebite.auth.jwt;
 import gdg.beforeonebite.auth.domain.AuthUser;
 import gdg.beforeonebite.auth.exception.BadRequestException;
 import gdg.beforeonebite.auth.exception.ErrorMessage;
+import gdg.beforeonebite.auth.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -84,7 +85,7 @@ public class TokenProvider {
         String tokenType = claims.get(TOKEN_TYPE, String.class);
 
         if (REFRESH_TOKEN.equals(tokenType)) {
-            throw new BadRequestException(ErrorMessage.NO_REFRESH_TOKEN_IN_LOGIN);
+            throw new UnauthorizedException(ErrorMessage.INVALID_REFRESH_TOKEN);
         }
 
         Long userId = Long.parseLong(claims.getSubject());

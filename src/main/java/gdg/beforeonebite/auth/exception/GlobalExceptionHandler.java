@@ -53,8 +53,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse(e.getMessage()));
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> runtimeExceptionHandler(RuntimeException e) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> exceptionHandler(Exception e) {
         log.error("Unhandled exception", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("서버 오류가 발생했습니다."));
     }
