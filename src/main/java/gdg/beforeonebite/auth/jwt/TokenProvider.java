@@ -1,6 +1,8 @@
 package gdg.beforeonebite.auth.jwt;
 
 import gdg.beforeonebite.auth.domain.AuthUser;
+import gdg.beforeonebite.auth.exception.BadRequestException;
+import gdg.beforeonebite.auth.exception.ErrorMessage;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -30,6 +32,9 @@ public class TokenProvider {
     private static final String AUTHORIZATION = "Authorization";
     private static final String BEARER = "Bearer ";
     private static final String ROLE_PREFIX = "ROLE_";
+    private static final String TOKEN_TYPE = "token_type";
+    private static final String ACCESS_TOKEN = "access_token";
+    private static final String REFRESH_TOKEN = "refresh_token";
 
     private final SecretKey key;
     private final long accessTokenValidityTime;
@@ -54,7 +59,7 @@ public class TokenProvider {
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim(ROLE_CLAIM, rawRole)
-                .claim("token_type", "access_token")
+                .claim(TOKEN_TYPE, ACCESS_TOKEN)
                 .issuedAt(now)
                 .expiration(expiration)
                 .signWith(key)
@@ -67,7 +72,7 @@ public class TokenProvider {
 
         return Jwts.builder()
                 .subject(userId.toString())
-                .claim("token_type", "refresh_token")
+                .claim(TOKEN_TYPE, REFRESH_TOKEN)
                 .issuedAt(now)
                 .expiration(expiration)
                 .signWith(key)
@@ -76,10 +81,10 @@ public class TokenProvider {
 
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaim(token);
-        String tokenType = claims.get("token_type", String.class);
+        String tokenType = claims.get(TOKEN_TYPE, String.class);
 
-        if ("refresh_token".equals(tokenType)) {
-            throw new IllegalArgumentException("리프레시 토큰은 인증에 사용할 수 없습니다.");
+        if (REFRESH_TOKEN.equals(tokenType)) {
+            throw new BadRequestException(ErrorMessage.NO_REFRESH_TOKEN_IN_LOGIN);
         }
 
         Long userId = Long.parseLong(claims.getSubject());
@@ -134,15 +139,16 @@ public class TokenProvider {
         }
 
         String trimmed = role.trim();
+
         return trimmed.startsWith(ROLE_PREFIX) ? trimmed : ROLE_PREFIX + trimmed;
     }
 
     public Long getUserIdFromRefreshToken(String token) {
         Claims claims = parseClaim(token);
-        String tokenType = claims.get("token_type", String.class);
+        String tokenType = claims.get(TOKEN_TYPE, String.class);
 
-        if (!"refresh_token".equals(tokenType)) {
-            throw new IllegalArgumentException("refresh token이 아닙니다.");
+        if (!REFRESH_TOKEN.equals(tokenType)) {
+            throw new BadRequestException(ErrorMessage.IS_NOT_REFRESH_TOKEN);
         }
 
         return Long.parseLong(claims.getSubject());

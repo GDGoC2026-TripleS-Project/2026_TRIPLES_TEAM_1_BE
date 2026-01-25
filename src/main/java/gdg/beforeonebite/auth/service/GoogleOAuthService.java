@@ -4,6 +4,8 @@ import gdg.beforeonebite.auth.domain.OAuthProvider;
 import gdg.beforeonebite.auth.domain.User;
 import gdg.beforeonebite.auth.dto.GoogleTokenResponse;
 import gdg.beforeonebite.auth.dto.GoogleUserInfoResponse;
+import gdg.beforeonebite.auth.exception.ErrorMessage;
+import gdg.beforeonebite.auth.exception.UnauthorizedException;
 import gdg.beforeonebite.auth.jwt.TokenProvider;
 import gdg.beforeonebite.auth.repository.UserRepository;
 import gdg.beforeonebite.auth.util.CookieUtil;
@@ -67,7 +69,7 @@ public class GoogleOAuthService {
 
         if (state == null || stateCookie == null || !state.equals(stateCookie)) {
             CookieUtil.clearOAuthState(response, cookieSecure);
-            throw new IllegalArgumentException("OAUTH_STATE_VALIDATION_FAILED");
+            throw new UnauthorizedException(ErrorMessage.OAUTH_STATE_VALIDATION_FAILED);
         }
         CookieUtil.clearOAuthState(response, cookieSecure);
 

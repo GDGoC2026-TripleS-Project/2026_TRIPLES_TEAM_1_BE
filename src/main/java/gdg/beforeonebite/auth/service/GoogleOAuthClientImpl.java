@@ -2,6 +2,9 @@ package gdg.beforeonebite.auth.service;
 
 import gdg.beforeonebite.auth.dto.GoogleTokenResponse;
 import gdg.beforeonebite.auth.dto.GoogleUserInfoResponse;
+import gdg.beforeonebite.auth.exception.ErrorMessage;
+import gdg.beforeonebite.auth.exception.ExternalServiceException;
+import gdg.beforeonebite.auth.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -51,12 +54,12 @@ public class GoogleOAuthClientImpl implements GoogleOAuthClient {
             ResponseEntity<GoogleTokenResponse> response = restTemplate.exchange(TOKEN_URL, HttpMethod.POST, request, GoogleTokenResponse.class);
 
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-                throw new IllegalArgumentException("교환 실패");
+                throw new UnauthorizedException(ErrorMessage.OAUTH_TOKEN_EXCHANGE_FAILED);
             }
 
             return response.getBody();
         } catch (RestClientException e) {
-            throw new IllegalArgumentException("교환 실패", e);
+            throw new ExternalServiceException(ErrorMessage.GOOGLE_OAUTH_UNAVAILABLE.getMessage(), e);
         }
     }
 
@@ -71,12 +74,12 @@ public class GoogleOAuthClientImpl implements GoogleOAuthClient {
             ResponseEntity<GoogleUserInfoResponse> exchanged = restTemplate.exchange(USERINFO_URL, HttpMethod.GET, httpEntity, GoogleUserInfoResponse.class);
 
             if (!exchanged.getStatusCode().is2xxSuccessful() || exchanged.getBody() == null) {
-                throw new IllegalArgumentException("사용자 프로필 불러오기 실패");
+                throw new UnauthorizedException(ErrorMessage.OAUTH_PROFILE_FETCH_FAILED);
             }
 
             return exchanged.getBody();
         } catch (RestClientException e) {
-            throw new IllegalArgumentException("사용자 프로필 불러오기 실패", e);
+            throw new ExternalServiceException(ErrorMessage.GOOGLE_OAUTH_UNAVAILABLE.getMessage(), e);
         }
     }
 }
