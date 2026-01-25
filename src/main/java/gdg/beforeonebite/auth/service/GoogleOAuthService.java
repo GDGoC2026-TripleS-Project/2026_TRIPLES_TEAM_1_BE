@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
 
@@ -24,7 +22,6 @@ import java.util.Base64;
 public class GoogleOAuthService {
 
     private static final String GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
-    private static final String DEFAULT_ROLE = "USER";
 
     private final GoogleOAuthClient googleOAuthClient;
     private final UserRepository userRepository;
@@ -42,15 +39,21 @@ public class GoogleOAuthService {
     @Value("${app.oauth.frontend-redirect-url}")
     private String frontendRedirectUrl;
 
+    @Value("${auth.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${auth.cookie.refresh-max-age:604800}")
+    private long refreshMaxAgeSeconds;
+
     public String buildGoogleAuthorizeUrl(HttpServletResponse response) {
         String state = generateState();
-        CookieUtil.setOAuthState(response, state);
+        CookieUtil.setOAuthState(response, state, cookieSecure);
 
         return UriComponentsBuilder.fromHttpUrl(GOOGLE_AUTH_URL)
                 .queryParam("client_id", clientId)
                 .queryParam("redirect_uri", redirectUri)
                 .queryParam("response_type", "code")
-                .queryParam("scope", scope) // openid email profile
+                .queryParam("scope", scope)
                 .queryParam("access_type", "offline")
                 .queryParam("prompt", "consent")
                 .queryParam("state", state)
@@ -63,11 +66,10 @@ public class GoogleOAuthService {
         String stateCookie = CookieUtil.getOAuthState(request);
 
         if (state == null || stateCookie == null || !state.equals(stateCookie)) {
-            CookieUtil.clearOAuthState(response);
+            CookieUtil.clearOAuthState(response, cookieSecure);
             throw new IllegalArgumentException("OAUTH_STATE_VALIDATION_FAILED");
         }
-
-        CookieUtil.clearOAuthState(response);
+        CookieUtil.clearOAuthState(response, cookieSecure);
 
         GoogleTokenResponse googleToken = googleOAuthClient.exchangeCodeForToken(code);
         GoogleUserInfoResponse userInfo = googleOAuthClient.getUserInfo(googleToken.accessToken());
@@ -80,9 +82,10 @@ public class GoogleOAuthService {
                         .name(trimName(userInfo.name()))
                         .build()));
 
-        String accessToken = tokenProvider.createAccessToken(user.getId(), DEFAULT_ROLE);
-        String encodedAccess = URLEncoder.encode(accessToken, StandardCharsets.UTF_8);
-        return frontendRedirectUrl + "?accessToken=" + encodedAccess;
+        String refreshToken = tokenProvider.createRefreshToken(user.getId());
+        CookieUtil.setRefreshToken(response, refreshToken, cookieSecure, refreshMaxAgeSeconds);
+
+        return frontendRedirectUrl;
     }
 
     private String trimName(String name) {
@@ -96,6 +99,7 @@ public class GoogleOAuthService {
     private String generateState() {
         byte[] bytes = new byte[32];
         new SecureRandom().nextBytes(bytes);
+
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }

@@ -136,4 +136,15 @@ public class TokenProvider {
         String trimmed = role.trim();
         return trimmed.startsWith(ROLE_PREFIX) ? trimmed : ROLE_PREFIX + trimmed;
     }
+
+    public Long getUserIdFromRefreshToken(String token) {
+        Claims claims = parseClaim(token);
+        String tokenType = claims.get("token_type", String.class);
+
+        if (!"refresh_token".equals(tokenType)) {
+            throw new IllegalArgumentException("refresh token이 아닙니다.");
+        }
+
+        return Long.parseLong(claims.getSubject());
+    }
 }

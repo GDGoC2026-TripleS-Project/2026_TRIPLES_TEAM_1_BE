@@ -28,6 +28,11 @@ app:
       scope: "openid email profile"
     frontend-redirect-url: https://www.naver.com # 임시
 
+auth:
+  cookie:
+    secure: false # 운영 시 true로
+    refresh-max-age: 604800
+
 springdoc:
   swagger-ui:
     path: /

@@ -3,35 +3,76 @@ package gdg.beforeonebite.auth.util;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseCookie;
 
 public class CookieUtil {
 
     private static final String OAUTH_STATE = "OAUTH_STATE";
-    private static final int STATE_MAX_AGE_SECONDS = 300; // 5분
+    private static final int STATE_MAX_AGE_SECONDS = 300;
 
-    public static void setOAuthState(HttpServletResponse response, String state) {
-        Cookie cookie = new Cookie(OAUTH_STATE, state);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(STATE_MAX_AGE_SECONDS);
-        response.addCookie(cookie);
+    private static final String REFRESH_TOKEN = "refresh_token";
+
+    public static void setOAuthState(HttpServletResponse response, String state, boolean secure) {
+        ResponseCookie cookie = ResponseCookie.from(OAUTH_STATE, state)
+                .httpOnly(true)
+                .secure(secure)
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(STATE_MAX_AGE_SECONDS)
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     public static String getOAuthState(HttpServletRequest request) {
-        if (request.getCookies() == null) return null;
-        for (Cookie c : request.getCookies()) {
-            if (OAUTH_STATE.equals(c.getName())) return c.getValue();
-        }
-        return null;
+        return getCookieValue(request, OAUTH_STATE);
     }
 
-    public static void clearOAuthState(HttpServletResponse response) {
-        Cookie cookie = new Cookie(OAUTH_STATE, "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+    public static void clearOAuthState(HttpServletResponse response, boolean secure) {
+        ResponseCookie cookie = ResponseCookie.from(OAUTH_STATE, "")
+                .httpOnly(true)
+                .secure(secure)
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(0)
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    public static void setRefreshToken(HttpServletResponse response, String token, boolean secure, long maxAgeSeconds) {
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, token)
+                .httpOnly(true)
+                .secure(secure)
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(maxAgeSeconds)
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    public static String getRefreshToken(HttpServletRequest request) {
+        return getCookieValue(request, REFRESH_TOKEN);
+    }
+
+    public static void clearRefreshToken(HttpServletResponse response, boolean secure) {
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, "")
+                .httpOnly(true)
+                .secure(secure)
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(0)
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    private static String getCookieValue(HttpServletRequest request, String name) {
+        if (request.getCookies() == null) {
+            return null;
+        }
+
+        for (Cookie c : request.getCookies()) {
+            if (name.equals(c.getName())) return c.getValue();
+        }
+
+        return null;
     }
 }
