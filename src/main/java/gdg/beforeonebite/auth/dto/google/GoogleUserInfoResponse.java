@@ -1,4 +1,4 @@
-package gdg.beforeonebite.auth.dto;
+package gdg.beforeonebite.auth.dto.google;
 
 public record GoogleUserInfoResponse (
         String sub,

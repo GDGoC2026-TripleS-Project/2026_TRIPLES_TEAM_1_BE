@@ -1,7 +1,7 @@
 package gdg.beforeonebite.auth.service;
 
-import gdg.beforeonebite.auth.dto.GoogleTokenResponse;
-import gdg.beforeonebite.auth.dto.GoogleUserInfoResponse;
+import gdg.beforeonebite.auth.dto.google.GoogleTokenResponse;
+import gdg.beforeonebite.auth.dto.google.GoogleUserInfoResponse;
 import gdg.beforeonebite.exception.ErrorMessage;
 import gdg.beforeonebite.exception.ExternalServiceException;
 import gdg.beforeonebite.exception.UnauthorizedException;

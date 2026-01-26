@@ -1,4 +1,4 @@
-package gdg.beforeonebite.auth.dto;
+package gdg.beforeonebite.auth.dto.google;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
