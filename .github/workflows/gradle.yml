@@ -53,6 +53,8 @@ jobs:
           script: |
             set -e
             cd /home/${{ secrets.REMOTE_USERNAME }}/Docker
-            docker build -t beforeonebite-backend:latest -f 2026_TRIPLES_TEAM_1_BE/Dockerfile 2026_TRIPLES_TEAM_1_BE
-            docker-compose up -d --no-deps --force-recreate backend
-            docker image prune -f
+            docker stop springboot || true
+            docker rm springboot || true
+            docker rmi beforeonebite-backend:latest || true
+            docker-compose build --no-cache backend
+            docker-compose up -d backend
