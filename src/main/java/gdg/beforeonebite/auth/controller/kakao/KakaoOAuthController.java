@@ -1,6 +1,6 @@
-package gdg.beforeonebite.auth.controller;
+package gdg.beforeonebite.auth.controller.kakao;
 
-import gdg.beforeonebite.auth.service.google.GoogleOAuthService;
+import gdg.beforeonebite.auth.service.kakao.KakaoOAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,23 +12,23 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-public class GoogleOAuthController {
+public class KakaoOAuthController {
 
-    private final GoogleOAuthService googleOAuthService;
+    private final KakaoOAuthService kakaoOAuthService;
 
-    @GetMapping("/auth/google")
-    public void redirectToGoogle(HttpServletResponse response) throws IOException {
-        String googleUrl = googleOAuthService.buildGoogleAuthorizeUrl(response);
-        response.sendRedirect(googleUrl);
+    @GetMapping("/auth/kakao")
+    public void redirectToKakao(HttpServletResponse response) throws IOException {
+        String url = kakaoOAuthService.buildKakaoAuthorizeUrl(response);
+        response.sendRedirect(url);
     }
 
-    @GetMapping("/oauth2/callback/google")
+    @GetMapping("/oauth2/callback/kakao")
     public void callback(@RequestParam String code,
                          @RequestParam(required = false) String state,
                          HttpServletRequest request,
                          HttpServletResponse response) throws IOException {
 
-        String redirectUrl = googleOAuthService.handleCallback(code, state, request, response);
+        String redirectUrl = kakaoOAuthService.handleCallback(code, state, request, response);
         response.sendRedirect(redirectUrl);
     }
 }
