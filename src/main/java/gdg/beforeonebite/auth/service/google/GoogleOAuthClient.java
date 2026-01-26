@@ -1,4 +1,4 @@
-package gdg.beforeonebite.auth.service;
+package gdg.beforeonebite.auth.service.google;
 
 import gdg.beforeonebite.auth.dto.google.GoogleTokenResponse;
 import gdg.beforeonebite.auth.dto.google.GoogleUserInfoResponse;

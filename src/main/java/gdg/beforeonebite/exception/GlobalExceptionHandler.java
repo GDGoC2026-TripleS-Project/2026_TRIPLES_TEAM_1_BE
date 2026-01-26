@@ -1,6 +1,6 @@
 package gdg.beforeonebite.exception;
 
-import gdg.beforeonebite.auth.dto.ErrorResponse;
+import gdg.beforeonebite.exception.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;

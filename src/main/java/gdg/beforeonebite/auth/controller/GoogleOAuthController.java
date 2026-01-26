@@ -1,6 +1,6 @@
 package gdg.beforeonebite.auth.controller;
 
-import gdg.beforeonebite.auth.service.GoogleOAuthService;
+import gdg.beforeonebite.auth.service.google.GoogleOAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

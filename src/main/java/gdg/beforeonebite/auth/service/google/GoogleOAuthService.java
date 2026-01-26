@@ -1,4 +1,4 @@
-package gdg.beforeonebite.auth.service;
+package gdg.beforeonebite.auth.service.google;
 
 import gdg.beforeonebite.auth.domain.OAuthProvider;
 import gdg.beforeonebite.auth.domain.User;
