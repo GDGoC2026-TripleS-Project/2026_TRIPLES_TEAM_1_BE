@@ -1,4 +1,4 @@
-package gdg.beforeonebite.auth.exception;
+package gdg.beforeonebite.exception;
 
 public class NotFoundException extends RuntimeException {
     public NotFoundException(ErrorMessage errorMessage) {

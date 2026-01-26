@@ -1,4 +1,4 @@
-package gdg.beforeonebite.auth.exception;
+package gdg.beforeonebite.exception;
 
 import lombok.Getter;
 

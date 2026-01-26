@@ -1,9 +1,9 @@
 package gdg.beforeonebite.auth.jwt;
 
 import gdg.beforeonebite.auth.domain.AuthUser;
-import gdg.beforeonebite.auth.exception.BadRequestException;
-import gdg.beforeonebite.auth.exception.ErrorMessage;
-import gdg.beforeonebite.auth.exception.UnauthorizedException;
+import gdg.beforeonebite.exception.BadRequestException;
+import gdg.beforeonebite.exception.ErrorMessage;
+import gdg.beforeonebite.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

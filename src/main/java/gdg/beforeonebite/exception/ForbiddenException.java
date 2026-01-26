@@ -1,4 +1,4 @@
-package gdg.beforeonebite.auth.exception;
+package gdg.beforeonebite.exception;
 
 public class ForbiddenException extends RuntimeException {
     public ForbiddenException(ErrorMessage errorMessage) {

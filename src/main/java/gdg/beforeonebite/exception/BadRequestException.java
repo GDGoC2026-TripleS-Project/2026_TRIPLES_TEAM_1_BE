@@ -1,4 +1,4 @@
-package gdg.beforeonebite.auth.exception;
+package gdg.beforeonebite.exception;
 
 public class BadRequestException extends RuntimeException {
     public BadRequestException(ErrorMessage errorMessage) {

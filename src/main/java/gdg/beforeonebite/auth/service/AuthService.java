@@ -1,9 +1,8 @@
 package gdg.beforeonebite.auth.service;
 
 import gdg.beforeonebite.auth.dto.TokenReissueResult;
-import gdg.beforeonebite.auth.exception.BadRequestException;
-import gdg.beforeonebite.auth.exception.ErrorMessage;
-import gdg.beforeonebite.auth.exception.UnauthorizedException;
+import gdg.beforeonebite.exception.ErrorMessage;
+import gdg.beforeonebite.exception.UnauthorizedException;
 import gdg.beforeonebite.auth.jwt.TokenProvider;
 import gdg.beforeonebite.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

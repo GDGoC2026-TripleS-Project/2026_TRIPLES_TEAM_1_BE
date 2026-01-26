@@ -2,9 +2,9 @@ package gdg.beforeonebite.auth.service;
 
 import gdg.beforeonebite.auth.dto.GoogleTokenResponse;
 import gdg.beforeonebite.auth.dto.GoogleUserInfoResponse;
-import gdg.beforeonebite.auth.exception.ErrorMessage;
-import gdg.beforeonebite.auth.exception.ExternalServiceException;
-import gdg.beforeonebite.auth.exception.UnauthorizedException;
+import gdg.beforeonebite.exception.ErrorMessage;
+import gdg.beforeonebite.exception.ExternalServiceException;
+import gdg.beforeonebite.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;

@@ -1,4 +1,4 @@
-package gdg.beforeonebite.auth.exception;
+package gdg.beforeonebite.exception;
 
 import gdg.beforeonebite.auth.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
