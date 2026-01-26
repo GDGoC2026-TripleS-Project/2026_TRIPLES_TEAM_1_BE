@@ -1,4 +1,4 @@
-package gdg.beforeonebite.auth.dto;
+package gdg.beforeonebite.exception.dto;
 
 public record ErrorResponse(
         String message

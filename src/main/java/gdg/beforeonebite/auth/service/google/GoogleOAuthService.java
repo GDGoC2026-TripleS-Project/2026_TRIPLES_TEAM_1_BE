@@ -1,14 +1,14 @@
-package gdg.beforeonebite.auth.service;
+package gdg.beforeonebite.auth.service.google;
 
 import gdg.beforeonebite.auth.domain.OAuthProvider;
 import gdg.beforeonebite.auth.domain.User;
-import gdg.beforeonebite.auth.dto.GoogleTokenResponse;
-import gdg.beforeonebite.auth.dto.GoogleUserInfoResponse;
-import gdg.beforeonebite.exception.ErrorMessage;
-import gdg.beforeonebite.exception.UnauthorizedException;
+import gdg.beforeonebite.auth.dto.google.GoogleTokenResponse;
+import gdg.beforeonebite.auth.dto.google.GoogleUserInfoResponse;
 import gdg.beforeonebite.auth.jwt.TokenProvider;
 import gdg.beforeonebite.auth.repository.UserRepository;
 import gdg.beforeonebite.auth.util.CookieUtil;
+import gdg.beforeonebite.exception.ErrorMessage;
+import gdg.beforeonebite.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
-package gdg.beforeonebite.auth.service;
+package gdg.beforeonebite.auth.service.google;
 
-import gdg.beforeonebite.auth.dto.GoogleTokenResponse;
-import gdg.beforeonebite.auth.dto.GoogleUserInfoResponse;
+import gdg.beforeonebite.auth.dto.google.GoogleTokenResponse;
+import gdg.beforeonebite.auth.dto.google.GoogleUserInfoResponse;
 import gdg.beforeonebite.exception.ErrorMessage;
 import gdg.beforeonebite.exception.ExternalServiceException;
 import gdg.beforeonebite.exception.UnauthorizedException;
@@ -59,7 +59,7 @@ public class GoogleOAuthClientImpl implements GoogleOAuthClient {
 
             return response.getBody();
         } catch (RestClientException e) {
-            throw new ExternalServiceException(ErrorMessage.GOOGLE_OAUTH_UNAVAILABLE.getMessage(), e);
+            throw new ExternalServiceException(ErrorMessage.OAUTH_UNAVAILABLE.getMessage(), e);
         }
     }
 
@@ -79,7 +79,7 @@ public class GoogleOAuthClientImpl implements GoogleOAuthClient {
 
             return exchanged.getBody();
         } catch (RestClientException e) {
-            throw new ExternalServiceException(ErrorMessage.GOOGLE_OAUTH_UNAVAILABLE.getMessage(), e);
+            throw new ExternalServiceException(ErrorMessage.OAUTH_UNAVAILABLE.getMessage(), e);
         }
     }
 }
