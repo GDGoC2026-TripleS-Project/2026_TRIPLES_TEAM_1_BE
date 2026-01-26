@@ -24,14 +24,14 @@ app:
     google:
       client-id: ${GOOGLE_CLIENT_ID}
       client-secret: ${GOOGLE_CLIENT_SECRET}
-      redirect-uri: http://localhost:8080/oauth2/callback/google
+      redirect-uri: https://api.sanidine.site/oauth2/callback/google
       scope: "openid email profile"
     frontend-redirect-url: https://www.naver.com # 임시
 
     kakao:
       client-id: ${KAKAO_CLIENT_ID}
       client-secret: ${KAKAO_CLIENT_SECRET}
-      redirect-uri: http://localhost:8080/oauth2/callback/kakao
+      redirect-uri: https://api.sanidine.site/oauth2/callback/kakao
       scope: "account_email profile_nickname"
 
 auth:
