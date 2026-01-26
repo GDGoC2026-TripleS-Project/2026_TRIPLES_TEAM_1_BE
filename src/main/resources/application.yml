@@ -14,6 +14,25 @@ spring:
         format_sql: false
     open-in-view: false
 
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity-in-milliseconds: ${ACCESS_TOKEN_VALIDITY_IN_MILLISECONDS}
+  refresh-token-validity-in-milliseconds: ${REFRESH_TOKEN_VALIDITY_IN_MILLISECONDS}
+
+app:
+  oauth:
+    google:
+      client-id: ${GOOGLE_CLIENT_ID}
+      client-secret: ${GOOGLE_CLIENT_SECRET}
+      redirect-uri: http://localhost:8080/oauth2/callback/google
+      scope: "openid email profile"
+    frontend-redirect-url: https://www.naver.com # 임시
+
+auth:
+  cookie:
+    secure: false # 운영 시 true로
+    refresh-max-age: 604800
+
 springdoc:
   swagger-ui:
     path: /
