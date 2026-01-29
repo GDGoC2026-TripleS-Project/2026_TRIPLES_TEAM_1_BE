@@ -4,6 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum ErrorMessage {
+
+    // Auth
     INVALID_REFRESH_TOKEN("유효하지 않은 토큰입니다."),
     INVALID_SESSION("세션이 만료되었습니다."),
     IS_NOT_REFRESH_TOKEN("리프레시 토큰이 아닙니다."),
@@ -13,7 +15,11 @@ public enum ErrorMessage {
     OAUTH_STATE_VALIDATION_FAILED("OAuth state 검증에 실패했습니다."),
     EXPIRED_TOKEN("만료된 토큰입니다."),
     INVALID_TOKEN("유효하지 않은 토큰입니다."),
-    NO_JTI_IN_TOKEN("refresh token에 jti가 없습니다.");
+    NO_JTI_IN_TOKEN("refresh token에 jti가 없습니다."),
+
+    // Food
+    INVALID_SEARCH_KEYWORD("검색어는 필수입니다."),
+    FOOD_NOT_EXIST("일치하는 음식이 없습니다.");
 
     private final String message;
 
