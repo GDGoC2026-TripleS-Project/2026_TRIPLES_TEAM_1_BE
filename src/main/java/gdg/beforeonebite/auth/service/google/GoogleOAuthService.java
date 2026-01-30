@@ -2,11 +2,11 @@ package gdg.beforeonebite.auth.service.google;
 
 import gdg.beforeonebite.auth.domain.OAuthProvider;
 import gdg.beforeonebite.auth.domain.User;
+import gdg.beforeonebite.auth.dto.TokenReissueResult;
 import gdg.beforeonebite.auth.dto.google.GoogleTokenResponse;
 import gdg.beforeonebite.auth.dto.google.GoogleUserInfoResponse;
-import gdg.beforeonebite.auth.jwt.TokenProvider;
 import gdg.beforeonebite.auth.repository.UserRepository;
-import gdg.beforeonebite.auth.service.refresh.RefreshTokenStore;
+import gdg.beforeonebite.auth.service.AuthService;
 import gdg.beforeonebite.auth.util.CookieUtil;
 import gdg.beforeonebite.exception.ErrorMessage;
 import gdg.beforeonebite.exception.UnauthorizedException;
@@ -28,8 +28,7 @@ public class GoogleOAuthService {
 
     private final GoogleOAuthClient googleOAuthClient;
     private final UserRepository userRepository;
-    private final TokenProvider tokenProvider;
-    private final RefreshTokenStore refreshTokenStore;
+    private final AuthService authService;
 
     @Value("${app.oauth.google.client-id}")
     private String clientId;
@@ -89,10 +88,8 @@ public class GoogleOAuthService {
                         .name(trimName(userInfo.name()))
                         .build()));
 
-        TokenProvider.RefreshIssued refresh = tokenProvider.createRefreshToken(user.getId());
-        refreshTokenStore.save(user.getId(), refresh.jti(), refresh.ttlSeconds());
-
-        CookieUtil.setRefreshToken(response, refresh.token(), cookieSecure, refreshMaxAgeSeconds, cookieSameSite);
+        TokenReissueResult session = authService.issueSession(user.getId());
+        CookieUtil.setRefreshToken(response, session.newRefreshToken(), cookieSecure, refreshMaxAgeSeconds, cookieSameSite);
 
         return frontendRedirectUrl;
     }

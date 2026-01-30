@@ -44,7 +44,7 @@ auth:
   cookie:
     secure: false
     refresh-max-age: 604800
-    same-site: None
+    same-site: Lax
 
 springdoc:
   swagger-ui:
