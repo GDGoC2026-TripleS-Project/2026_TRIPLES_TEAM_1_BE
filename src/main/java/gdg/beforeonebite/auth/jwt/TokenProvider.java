@@ -20,10 +20,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Component
 public class TokenProvider {
@@ -36,6 +38,7 @@ public class TokenProvider {
     private static final String TOKEN_TYPE = "token_type";
     private static final String ACCESS_TOKEN = "access_token";
     private static final String REFRESH_TOKEN = "refresh_token";
+    private static final String JTI = "jti";
 
     private final SecretKey key;
     private final long accessTokenValidityTime;
@@ -67,17 +70,22 @@ public class TokenProvider {
                 .compact();
     }
 
-    public String createRefreshToken(Long userId) {
+    public RefreshIssued createRefreshToken(Long userId) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + refreshTokenValidityTime);
+        String jti = UUID.randomUUID().toString();
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .subject(userId.toString())
                 .claim(TOKEN_TYPE, REFRESH_TOKEN)
+                .claim(JTI, jti)
                 .issuedAt(now)
                 .expiration(expiration)
                 .signWith(key)
                 .compact();
+
+        long ttlSeconds = Math.max(1L, expiration.toInstant().getEpochSecond() - Instant.now().getEpochSecond());
+        return new RefreshIssued(token, jti, ttlSeconds);
     }
 
     public Authentication getAuthentication(String token) {
@@ -154,4 +162,25 @@ public class TokenProvider {
 
         return Long.parseLong(claims.getSubject());
     }
+
+    public RefreshClaims parseRefreshClaims(String token) {
+        Claims claims = parseClaim(token);
+        String tokenType = claims.get(TOKEN_TYPE, String.class);
+
+        if (!REFRESH_TOKEN.equals(tokenType)) {
+            throw new BadRequestException(ErrorMessage.IS_NOT_REFRESH_TOKEN);
+        }
+
+        Long userId = Long.parseLong(claims.getSubject());
+        String jti = claims.get(JTI, String.class);
+        if (!StringUtils.hasText(jti)) {
+            throw new BadRequestException("refresh token에 jti가 없습니다.");
+        }
+
+        long ttlSeconds = Math.max(1L, claims.getExpiration().toInstant().getEpochSecond() - Instant.now().getEpochSecond());
+        return new RefreshClaims(userId, jti, ttlSeconds);
+    }
+
+    public record RefreshIssued(String token, String jti, long ttlSeconds) {}
+    public record RefreshClaims(Long userId, String jti, long ttlSeconds) {}
 }

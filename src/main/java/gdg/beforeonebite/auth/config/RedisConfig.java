@@ -22,8 +22,8 @@ public class RedisConfig {
                 "local cur = redis.call('GET', KEYS[1]) " +
                         "if (not cur) then return 0 end " +
                         "if (cur ~= ARGV[1]) then return -1 end " +
-                "redis.call('SETEX', KEYS[1], ARGV[3], ARGV[2]) " +
-                "return 1 "
+                        "redis.call('SETEX', KEYS[1], ARGV[3], ARGV[2]) " +
+                        "return 1 "
         );
         return script;
     }
