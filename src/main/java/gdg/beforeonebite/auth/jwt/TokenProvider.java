@@ -133,8 +133,12 @@ public class TokenProvider {
     public Claims parseClaim(String token) {
         try {
             return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
-        } catch (JwtException e) {
-            throw new UnauthorizedException(ErrorMessage.INVALID_REFRESH_TOKEN);
+        } catch (ExpiredJwtException e) {
+            throw new UnauthorizedException(ErrorMessage.EXPIRED_TOKEN);
+        } catch (SecurityException e) {
+            throw new UnauthorizedException(ErrorMessage.INVALID_TOKEN);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException(ErrorMessage.INVALID_TOKEN);
         }
     }
 
@@ -158,7 +162,7 @@ public class TokenProvider {
         Long userId = Long.parseLong(claims.getSubject());
         String jti = claims.get(JTI, String.class);
         if (!StringUtils.hasText(jti)) {
-            throw new BadRequestException("refresh token에 jti가 없습니다.");
+            throw new BadRequestException(ErrorMessage.NO_JTI_IN_TOKEN);
         }
 
         long ttlSeconds = Math.max(1L, claims.getExpiration().toInstant().getEpochSecond() - Instant.now().getEpochSecond());
