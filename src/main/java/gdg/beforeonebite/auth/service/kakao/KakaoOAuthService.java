@@ -69,12 +69,7 @@ public class KakaoOAuthService {
     }
 
     public String handleCallback(String code, String state, HttpServletRequest request, HttpServletResponse response) {
-        String stateCookie = CookieUtil.getOAuthState(request);
-        if (state == null || stateCookie == null || !state.equals(stateCookie)) {
-            CookieUtil.clearOAuthState(response, cookieSecure, cookieSameSite);
-            throw new UnauthorizedException(ErrorMessage.OAUTH_STATE_VALIDATION_FAILED);
-        }
-        CookieUtil.clearOAuthState(response, cookieSecure, cookieSameSite);
+        CookieUtil.consumeOAuthStateOrThrow(request, response, state, cookieSecure, cookieSameSite);
 
         KakaoTokenResponse token = kakaoOAuthClient.exchangeCodeForToken(code);
         KakaoUserInfoResponse userInfo = kakaoOAuthClient.getUserInfo(token.accessToken());

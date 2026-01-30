@@ -1,5 +1,7 @@
 package gdg.beforeonebite.auth.util;
 
+import gdg.beforeonebite.exception.ErrorMessage;
+import gdg.beforeonebite.exception.UnauthorizedException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -78,5 +80,14 @@ public class CookieUtil {
         }
 
         return "None".equalsIgnoreCase(sameSite) || secure;
+    }
+
+    public static void consumeOAuthStateOrThrow(HttpServletRequest request, HttpServletResponse response, String state, boolean secure, String sameSite) {
+        String stateCookie = getOAuthState(request);
+        clearOAuthState(response, secure, sameSite);
+
+        if (state == null || stateCookie == null || !state.equals(stateCookie)) {
+            throw new UnauthorizedException(ErrorMessage.OAUTH_STATE_VALIDATION_FAILED);
+        }
     }
 }
