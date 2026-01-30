@@ -3,12 +3,15 @@ package gdg.beforeonebite.auth.service;
 import gdg.beforeonebite.auth.dto.TokenReissueResult;
 import gdg.beforeonebite.auth.jwt.TokenProvider;
 import gdg.beforeonebite.auth.service.refresh.RefreshTokenStore;
+import gdg.beforeonebite.exception.BadRequestException;
 import gdg.beforeonebite.exception.ErrorMessage;
 import gdg.beforeonebite.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -26,8 +29,9 @@ public class AuthServiceImpl implements AuthService {
         return new TokenReissueResult(access, refresh.token());
     }
 
+    @Override
     public TokenReissueResult reissue(String refreshToken) {
-        if (!StringUtils.hasText(refreshToken) || !tokenProvider.validateToken(refreshToken)) {
+        if (!StringUtils.hasText(refreshToken)) {
             throw new UnauthorizedException(ErrorMessage.INVALID_REFRESH_TOKEN);
         }
 
@@ -48,11 +52,21 @@ public class AuthServiceImpl implements AuthService {
         return new TokenReissueResult(newAccess, fresh.token());
     }
 
+    @Override
     public void logout(String refreshToken) {
-        if (!StringUtils.hasText(refreshToken) || !tokenProvider.validateToken(refreshToken)) {
+        if (!StringUtils.hasText(refreshToken)) {
             return;
         }
-        TokenProvider.RefreshClaims claims = tokenProvider.parseRefreshClaims(refreshToken);
-        refreshTokenStore.delete(claims.userId());
+
+        try {
+            Long userId = tokenProvider.getUserIdFromRefreshAllowExpired(refreshToken);
+            refreshTokenStore.delete(userId);
+        } catch (UnauthorizedException e) {
+            log.debug("Logout skipped: {}", e.getMessage());
+        } catch (BadRequestException e) {
+            log.debug("Logout skipped (bad token): {}", e.getMessage());
+        } catch (Exception e) {
+            log.warn("Logout failed unexpectedly", e);
+        }
     }
 }

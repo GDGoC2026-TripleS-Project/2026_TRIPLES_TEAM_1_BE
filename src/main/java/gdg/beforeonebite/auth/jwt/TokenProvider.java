@@ -169,6 +169,28 @@ public class TokenProvider {
         return new RefreshClaims(userId, jti, ttlSeconds);
     }
 
+    public Claims parseClaimAllowExpired(String token) {
+        try {
+            return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
+        } catch (SecurityException e) {
+            throw new UnauthorizedException(ErrorMessage.INVALID_TOKEN);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException(ErrorMessage.INVALID_TOKEN);
+        }
+    }
+
+    public Long getUserIdFromRefreshAllowExpired(String token) {
+        Claims claims = parseClaimAllowExpired(token);
+
+        String tokenType = claims.get(TOKEN_TYPE, String.class);
+        if (!REFRESH_TOKEN.equals(tokenType)) {
+            throw new BadRequestException(ErrorMessage.IS_NOT_REFRESH_TOKEN);
+        }
+        return Long.parseLong(claims.getSubject());
+    }
+
     public record RefreshIssued(String token, String jti, long ttlSeconds) {
     }
 
