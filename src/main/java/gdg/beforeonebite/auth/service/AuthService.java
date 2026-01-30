@@ -2,7 +2,7 @@ package gdg.beforeonebite.auth.service;
 
 import gdg.beforeonebite.auth.dto.TokenReissueResult;
 import gdg.beforeonebite.auth.jwt.TokenProvider;
-import gdg.beforeonebite.auth.repository.UserRepository;
+import gdg.beforeonebite.auth.service.refresh.RefreshTokenStore;
 import gdg.beforeonebite.exception.ErrorMessage;
 import gdg.beforeonebite.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
@@ -16,23 +16,28 @@ public class AuthService {
     private static final String DEFAULT_ROLE = "USER";
 
     private final TokenProvider tokenProvider;
-    private final UserRepository userRepository;
+    private final RefreshTokenStore refreshTokenStore;
 
     public TokenReissueResult reissue(String refreshToken) {
         if (!StringUtils.hasText(refreshToken) || !tokenProvider.validateToken(refreshToken)) {
             throw new UnauthorizedException(ErrorMessage.INVALID_REFRESH_TOKEN);
         }
 
-        Long userId = tokenProvider.getUserIdFromRefreshToken(refreshToken);
+        TokenProvider.RefreshClaims old = tokenProvider.parseRefreshClaims(refreshToken);
+        TokenProvider.RefreshIssued fresh = tokenProvider.createRefreshToken(old.userId());
 
-        if (!userRepository.existsById(userId)) {
+        long rotated = refreshTokenStore.rotate(old.userId(), old.jti(), fresh.jti(), fresh.ttlSeconds());
+
+        if (rotated == 0) {
+            throw new UnauthorizedException(ErrorMessage.INVALID_SESSION);
+        }
+        if (rotated == -1) {
+            refreshTokenStore.delete(old.userId());
             throw new UnauthorizedException(ErrorMessage.INVALID_SESSION);
         }
 
-        String newAccess = tokenProvider.createAccessToken(userId, DEFAULT_ROLE);
-        String newRefresh = tokenProvider.createRefreshToken(userId);
-
-        return new TokenReissueResult(newAccess, newRefresh);
+        String newAccess = tokenProvider.createAccessToken(old.userId(), DEFAULT_ROLE);
+        return new TokenReissueResult(newAccess, fresh.token());
     }
 }
 
