@@ -42,8 +42,9 @@ app:
 
 auth:
   cookie:
-    secure: false # 운영 시 true로
+    secure: false
     refresh-max-age: 604800
+    same-site: None
 
 springdoc:
   swagger-ui:

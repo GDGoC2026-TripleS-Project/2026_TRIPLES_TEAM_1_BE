@@ -17,6 +17,14 @@ public class AuthService {
 
     private final TokenProvider tokenProvider;
     private final RefreshTokenStore refreshTokenStore;
+    
+    public TokenReissueResult issueSession(Long userId) {
+        TokenProvider.RefreshIssued refresh = tokenProvider.createRefreshToken(userId);
+        refreshTokenStore.save(userId, refresh.jti(), refresh.ttlSeconds());
+
+        String access = tokenProvider.createAccessToken(userId, DEFAULT_ROLE);
+        return new TokenReissueResult(access, refresh.token());
+    }
 
     public TokenReissueResult reissue(String refreshToken) {
         if (!StringUtils.hasText(refreshToken) || !tokenProvider.validateToken(refreshToken)) {
@@ -39,5 +47,12 @@ public class AuthService {
         String newAccess = tokenProvider.createAccessToken(old.userId(), DEFAULT_ROLE);
         return new TokenReissueResult(newAccess, fresh.token());
     }
-}
 
+    public void logout(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken) || !tokenProvider.validateToken(refreshToken)) {
+            return;
+        }
+        TokenProvider.RefreshClaims claims = tokenProvider.parseRefreshClaims(refreshToken);
+        refreshTokenStore.delete(claims.userId());
+    }
+}

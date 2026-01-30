@@ -3,6 +3,7 @@ package gdg.beforeonebite.auth.controller;
 import gdg.beforeonebite.auth.dto.TokenReissueResult;
 import gdg.beforeonebite.auth.service.AuthService;
 import gdg.beforeonebite.auth.util.CookieUtil;
+import gdg.beforeonebite.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,27 +27,32 @@ public class AuthController {
     @Value("${auth.cookie.refresh-max-age:604800}")
     private long refreshMaxAgeSeconds;
 
+    @Value("${auth.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
     @PostMapping("/reissue")
     public ResponseEntity<AccessTokenResponse> reissue(HttpServletRequest request, HttpServletResponse response) {
         try {
             String refresh = CookieUtil.getRefreshToken(request);
             TokenReissueResult result = authService.reissue(refresh);
 
-            CookieUtil.setRefreshToken(response, result.newRefreshToken(), cookieSecure, refreshMaxAgeSeconds);
+            CookieUtil.setRefreshToken(response, result.newRefreshToken(), cookieSecure, refreshMaxAgeSeconds, cookieSameSite);
             return ResponseEntity.ok(new AccessTokenResponse(result.accessToken()));
-        } catch (IllegalArgumentException e) {
-            CookieUtil.clearRefreshToken(response, cookieSecure);
+        } catch (UnauthorizedException | IllegalArgumentException e) {
+            CookieUtil.clearRefreshToken(response, cookieSecure, cookieSameSite);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
-        CookieUtil.clearRefreshToken(response, cookieSecure);
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        String refresh = CookieUtil.getRefreshToken(request);
+        authService.logout(refresh);
+
+        CookieUtil.clearRefreshToken(response, cookieSecure, cookieSameSite);
         return ResponseEntity.noContent().build();
     }
 
     public record AccessTokenResponse(String accessToken) {
     }
 }
-

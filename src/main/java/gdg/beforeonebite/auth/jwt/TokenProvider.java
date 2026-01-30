@@ -109,7 +109,6 @@ public class TokenProvider {
                         .toList();
 
         AuthUser principal = new AuthUser(userId, roleClaim);
-
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
@@ -128,17 +127,14 @@ public class TokenProvider {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER)) {
             return bearerToken.substring(BEARER.length());
         }
-
         return null;
     }
 
     public Claims parseClaim(String token) {
         try {
             return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
-        } catch (ExpiredJwtException e) {
-            return e.getClaims();
-        } catch (SecurityException e) {
-            throw new RuntimeException("토큰 복호화에 실패했습니다.");
+        } catch (JwtException e) {
+            throw new UnauthorizedException(ErrorMessage.INVALID_REFRESH_TOKEN);
         }
     }
 
@@ -148,19 +144,7 @@ public class TokenProvider {
         }
 
         String trimmed = role.trim();
-
         return trimmed.startsWith(ROLE_PREFIX) ? trimmed : ROLE_PREFIX + trimmed;
-    }
-
-    public Long getUserIdFromRefreshToken(String token) {
-        Claims claims = parseClaim(token);
-        String tokenType = claims.get(TOKEN_TYPE, String.class);
-
-        if (!REFRESH_TOKEN.equals(tokenType)) {
-            throw new BadRequestException(ErrorMessage.IS_NOT_REFRESH_TOKEN);
-        }
-
-        return Long.parseLong(claims.getSubject());
     }
 
     public RefreshClaims parseRefreshClaims(String token) {
@@ -181,6 +165,9 @@ public class TokenProvider {
         return new RefreshClaims(userId, jti, ttlSeconds);
     }
 
-    public record RefreshIssued(String token, String jti, long ttlSeconds) {}
-    public record RefreshClaims(Long userId, String jti, long ttlSeconds) {}
+    public record RefreshIssued(String token, String jti, long ttlSeconds) {
+    }
+
+    public record RefreshClaims(Long userId, String jti, long ttlSeconds) {
+    }
 }
