@@ -6,6 +6,7 @@ import gdg.beforeonebite.auth.dto.kakao.KakaoTokenResponse;
 import gdg.beforeonebite.auth.dto.kakao.KakaoUserInfoResponse;
 import gdg.beforeonebite.auth.jwt.TokenProvider;
 import gdg.beforeonebite.auth.repository.UserRepository;
+import gdg.beforeonebite.auth.service.refresh.RefreshTokenStore;
 import gdg.beforeonebite.auth.util.CookieUtil;
 import gdg.beforeonebite.exception.ErrorMessage;
 import gdg.beforeonebite.exception.UnauthorizedException;
@@ -16,8 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
 
@@ -30,6 +29,7 @@ public class KakaoOAuthService {
     private final KakaoOAuthClient kakaoOAuthClient;
     private final UserRepository userRepository;
     private final TokenProvider tokenProvider;
+    private final RefreshTokenStore refreshTokenStore;
 
     @Value("${app.oauth.kakao.client-id}")
     private String clientId;
@@ -49,11 +49,12 @@ public class KakaoOAuthService {
     @Value("${auth.cookie.refresh-max-age:604800}")
     private long refreshMaxAgeSeconds;
 
+    @Value("${auth.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
     public String buildKakaoAuthorizeUrl(HttpServletResponse response) {
         String state = generateState();
-        CookieUtil.setOAuthState(response, state, cookieSecure);
-
-        String encodedScope = (scope == null || scope.isBlank()) ? null : URLEncoder.encode(scope, StandardCharsets.UTF_8);
+        CookieUtil.setOAuthState(response, state, cookieSecure, cookieSameSite);
 
         UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(KAKAO_AUTH_URL)
                 .queryParam("client_id", clientId)
@@ -61,20 +62,20 @@ public class KakaoOAuthService {
                 .queryParam("response_type", "code")
                 .queryParam("state", state);
 
-        if (encodedScope != null) {
-            b.queryParam("scope", encodedScope);
+        if (scope != null && !scope.isBlank()) {
+            b.queryParam("scope", scope);
         }
 
-        return b.build(true).toUriString();
+        return b.build().encode().toUriString();
     }
 
     public String handleCallback(String code, String state, HttpServletRequest request, HttpServletResponse response) {
         String stateCookie = CookieUtil.getOAuthState(request);
         if (state == null || stateCookie == null || !state.equals(stateCookie)) {
-            CookieUtil.clearOAuthState(response, cookieSecure);
+            CookieUtil.clearOAuthState(response, cookieSecure, cookieSameSite);
             throw new UnauthorizedException(ErrorMessage.OAUTH_STATE_VALIDATION_FAILED);
         }
-        CookieUtil.clearOAuthState(response, cookieSecure);
+        CookieUtil.clearOAuthState(response, cookieSecure, cookieSameSite);
 
         KakaoTokenResponse token = kakaoOAuthClient.exchangeCodeForToken(code);
         KakaoUserInfoResponse userInfo = kakaoOAuthClient.getUserInfo(token.accessToken());
@@ -93,8 +94,10 @@ public class KakaoOAuthService {
                         .name(trimName(nickname))
                         .build()));
 
-        String refreshToken = tokenProvider.createRefreshToken(user.getId());
-        CookieUtil.setRefreshToken(response, refreshToken, cookieSecure, refreshMaxAgeSeconds);
+        TokenProvider.RefreshIssued refresh = tokenProvider.createRefreshToken(user.getId());
+        refreshTokenStore.save(user.getId(), refresh.jti(), refresh.ttlSeconds());
+
+        CookieUtil.setRefreshToken(response, refresh.token(), cookieSecure, refreshMaxAgeSeconds, cookieSameSite);
 
         return frontendRedirectUrl;
     }
