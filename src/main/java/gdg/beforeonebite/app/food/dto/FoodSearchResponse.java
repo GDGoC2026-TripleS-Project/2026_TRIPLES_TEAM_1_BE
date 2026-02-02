@@ -1,14 +1,13 @@
 package gdg.beforeonebite.app.food.dto;
 
-import gdg.beforeonebite.app.food.domain.Brand;
-import gdg.beforeonebite.app.food.domain.Food;
+import gdg.beforeonebite.app.food.domain.FoodBrand;
 import lombok.Builder;
 
 @Builder
 public record FoodSearchResponse(
         Long foodId,
         String foodName,
-        Brand brand,
+        String brand,
         String category,
         double calories,
         String guideMessage,
@@ -16,13 +15,16 @@ public record FoodSearchResponse(
         int activityMinutes
 
 ) {
-    public static FoodSearchResponse from(Food food, CalorieGuideDto calorieGuideDto) {
+    public static FoodSearchResponse from(
+            FoodBrand foodBrand,
+            CalorieGuideDto calorieGuideDto
+    ) {
         return FoodSearchResponse.builder()
-                .foodId(food.getId())
-                .foodName(food.getFoodName())
-                .brand(food.getBrand())
-                .category(food.getCategory())
-                .calories(food.getCalories())
+                .foodId(foodBrand.getFood().getId())
+                .foodName(foodBrand.getFood().getFoodName())
+                .brand(foodBrand.getBrand().getBrandName())
+                .category(foodBrand.getFood().getCategory())
+                .calories(foodBrand.getCalories())
                 .guideMessage(calorieGuideDto.message())
                 .walkingMinutes(calorieGuideDto.walkingMinutes())
                 .activityMinutes(calorieGuideDto.activityMinutes())

@@ -29,12 +29,6 @@ public class Food {
     @Column(nullable = false)
     private String foodName;
 
-    @Enumerated(EnumType.STRING)
-    private Brand brand;
-
     @Column(nullable = false)
     private String category;
-
-    @Column(nullable = false)
-    private double calories;
 }

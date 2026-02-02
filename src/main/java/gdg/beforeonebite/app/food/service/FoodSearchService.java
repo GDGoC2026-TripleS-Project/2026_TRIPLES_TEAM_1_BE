@@ -1,9 +1,9 @@
 package gdg.beforeonebite.app.food.service;
 
-import gdg.beforeonebite.app.food.domain.Food;
+import gdg.beforeonebite.app.food.domain.FoodBrand;
 import gdg.beforeonebite.app.food.dto.CalorieGuideDto;
 import gdg.beforeonebite.app.food.dto.FoodSearchResponse;
-import gdg.beforeonebite.app.food.repository.FoodRepository;
+import gdg.beforeonebite.app.food.repository.FoodBrandRepository;
 import gdg.beforeonebite.global.exception.BadRequestException;
 import gdg.beforeonebite.global.exception.ErrorMessage;
 import gdg.beforeonebite.global.exception.NotFoundException;
@@ -14,22 +14,24 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FoodSearchService {
 
-    private final FoodRepository foodRepository;
+    private final FoodBrandRepository foodBrandRepository;
     private final CalorieGuidePolicy calorieGuidePolicy;
 
     public FoodSearchResponse search(String keyword) {
-        if (keyword == null || keyword.isEmpty()) {
+        if (keyword == null || keyword.isBlank()) {
             throw new BadRequestException(ErrorMessage.INVALID_SEARCH_KEYWORD);
         }
 
         String normalized = normalize(keyword);
 
-        Food food = foodRepository.findByFoodName(normalized)
+        FoodBrand foodBrand = foodBrandRepository
+                .findByFood_FoodName(normalized)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
 
-        CalorieGuideDto guideDto = calorieGuidePolicy.from(food.getCalories());
+        CalorieGuideDto guideDto =
+                calorieGuidePolicy.from(foodBrand.getCalories());
 
-        return FoodSearchResponse.from(food, guideDto);
+        return FoodSearchResponse.from(foodBrand, guideDto);
     }
 
     private String normalize(String keyword) {
