@@ -20,10 +20,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Component
 public class TokenProvider {
@@ -36,6 +38,7 @@ public class TokenProvider {
     private static final String TOKEN_TYPE = "token_type";
     private static final String ACCESS_TOKEN = "access_token";
     private static final String REFRESH_TOKEN = "refresh_token";
+    private static final String JTI = "jti";
 
     private final SecretKey key;
     private final long accessTokenValidityTime;
@@ -67,17 +70,22 @@ public class TokenProvider {
                 .compact();
     }
 
-    public String createRefreshToken(Long userId) {
+    public RefreshIssued createRefreshToken(Long userId) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + refreshTokenValidityTime);
+        String jti = UUID.randomUUID().toString();
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .subject(userId.toString())
                 .claim(TOKEN_TYPE, REFRESH_TOKEN)
+                .claim(JTI, jti)
                 .issuedAt(now)
                 .expiration(expiration)
                 .signWith(key)
                 .compact();
+
+        long ttlSeconds = Math.max(1L, expiration.toInstant().getEpochSecond() - Instant.now().getEpochSecond());
+        return new RefreshIssued(token, jti, ttlSeconds);
     }
 
     public Authentication getAuthentication(String token) {
@@ -101,7 +109,6 @@ public class TokenProvider {
                         .toList();
 
         AuthUser principal = new AuthUser(userId, roleClaim);
-
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
@@ -120,7 +127,6 @@ public class TokenProvider {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER)) {
             return bearerToken.substring(BEARER.length());
         }
-
         return null;
     }
 
@@ -128,9 +134,11 @@ public class TokenProvider {
         try {
             return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
         } catch (ExpiredJwtException e) {
-            return e.getClaims();
+            throw new UnauthorizedException(ErrorMessage.EXPIRED_TOKEN);
         } catch (SecurityException e) {
-            throw new RuntimeException("토큰 복호화에 실패했습니다.");
+            throw new UnauthorizedException(ErrorMessage.INVALID_TOKEN);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException(ErrorMessage.INVALID_TOKEN);
         }
     }
 
@@ -140,11 +148,10 @@ public class TokenProvider {
         }
 
         String trimmed = role.trim();
-
         return trimmed.startsWith(ROLE_PREFIX) ? trimmed : ROLE_PREFIX + trimmed;
     }
 
-    public Long getUserIdFromRefreshToken(String token) {
+    public RefreshClaims parseRefreshClaims(String token) {
         Claims claims = parseClaim(token);
         String tokenType = claims.get(TOKEN_TYPE, String.class);
 
@@ -152,6 +159,41 @@ public class TokenProvider {
             throw new BadRequestException(ErrorMessage.IS_NOT_REFRESH_TOKEN);
         }
 
+        Long userId = Long.parseLong(claims.getSubject());
+        String jti = claims.get(JTI, String.class);
+        if (!StringUtils.hasText(jti)) {
+            throw new BadRequestException(ErrorMessage.NO_JTI_IN_TOKEN);
+        }
+
+        long ttlSeconds = Math.max(1L, claims.getExpiration().toInstant().getEpochSecond() - Instant.now().getEpochSecond());
+        return new RefreshClaims(userId, jti, ttlSeconds);
+    }
+
+    public Claims parseClaimAllowExpired(String token) {
+        try {
+            return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
+        } catch (SecurityException e) {
+            throw new UnauthorizedException(ErrorMessage.INVALID_TOKEN);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException(ErrorMessage.INVALID_TOKEN);
+        }
+    }
+
+    public Long getUserIdFromRefreshAllowExpired(String token) {
+        Claims claims = parseClaimAllowExpired(token);
+
+        String tokenType = claims.get(TOKEN_TYPE, String.class);
+        if (!REFRESH_TOKEN.equals(tokenType)) {
+            throw new BadRequestException(ErrorMessage.IS_NOT_REFRESH_TOKEN);
+        }
         return Long.parseLong(claims.getSubject());
+    }
+
+    public record RefreshIssued(String token, String jti, long ttlSeconds) {
+    }
+
+    public record RefreshClaims(Long userId, String jti, long ttlSeconds) {
     }
 }

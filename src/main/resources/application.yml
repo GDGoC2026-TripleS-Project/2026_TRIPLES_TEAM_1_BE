@@ -5,6 +5,11 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
   jpa:
     hibernate:
       ddl-auto: create
@@ -37,8 +42,9 @@ app:
 
 auth:
   cookie:
-    secure: false # 운영 시 true로
+    secure: false
     refresh-max-age: 604800
+    same-site: Lax
 
 springdoc:
   swagger-ui:

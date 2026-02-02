@@ -2,10 +2,11 @@ package gdg.beforeonebite.auth.service.google;
 
 import gdg.beforeonebite.auth.domain.OAuthProvider;
 import gdg.beforeonebite.auth.domain.User;
+import gdg.beforeonebite.auth.dto.TokenReissueResult;
 import gdg.beforeonebite.auth.dto.google.GoogleTokenResponse;
 import gdg.beforeonebite.auth.dto.google.GoogleUserInfoResponse;
-import gdg.beforeonebite.auth.jwt.TokenProvider;
 import gdg.beforeonebite.auth.repository.UserRepository;
+import gdg.beforeonebite.auth.service.AuthService;
 import gdg.beforeonebite.auth.util.CookieUtil;
 import gdg.beforeonebite.exception.ErrorMessage;
 import gdg.beforeonebite.exception.UnauthorizedException;
@@ -27,7 +28,7 @@ public class GoogleOAuthService {
 
     private final GoogleOAuthClient googleOAuthClient;
     private final UserRepository userRepository;
-    private final TokenProvider tokenProvider;
+    private final AuthService authService;
 
     @Value("${app.oauth.google.client-id}")
     private String clientId;
@@ -47,9 +48,12 @@ public class GoogleOAuthService {
     @Value("${auth.cookie.refresh-max-age:604800}")
     private long refreshMaxAgeSeconds;
 
+    @Value("${auth.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
     public String buildGoogleAuthorizeUrl(HttpServletResponse response) {
         String state = generateState();
-        CookieUtil.setOAuthState(response, state, cookieSecure);
+        CookieUtil.setOAuthState(response, state, cookieSecure, cookieSameSite);
 
         return UriComponentsBuilder.fromHttpUrl(GOOGLE_AUTH_URL)
                 .queryParam("client_id", clientId)
@@ -65,13 +69,7 @@ public class GoogleOAuthService {
     }
 
     public String handleCallback(String code, String state, HttpServletRequest request, HttpServletResponse response) {
-        String stateCookie = CookieUtil.getOAuthState(request);
-
-        if (state == null || stateCookie == null || !state.equals(stateCookie)) {
-            CookieUtil.clearOAuthState(response, cookieSecure);
-            throw new UnauthorizedException(ErrorMessage.OAUTH_STATE_VALIDATION_FAILED);
-        }
-        CookieUtil.clearOAuthState(response, cookieSecure);
+        CookieUtil.consumeOAuthStateOrThrow(request, response, state, cookieSecure, cookieSameSite);
 
         GoogleTokenResponse googleToken = googleOAuthClient.exchangeCodeForToken(code);
         GoogleUserInfoResponse userInfo = googleOAuthClient.getUserInfo(googleToken.accessToken());
@@ -84,8 +82,8 @@ public class GoogleOAuthService {
                         .name(trimName(userInfo.name()))
                         .build()));
 
-        String refreshToken = tokenProvider.createRefreshToken(user.getId());
-        CookieUtil.setRefreshToken(response, refreshToken, cookieSecure, refreshMaxAgeSeconds);
+        TokenReissueResult session = authService.issueSession(user.getId());
+        CookieUtil.setRefreshToken(response, session.newRefreshToken(), cookieSecure, refreshMaxAgeSeconds, cookieSameSite);
 
         return frontendRedirectUrl;
     }
@@ -101,7 +99,6 @@ public class GoogleOAuthService {
     private String generateState() {
         byte[] bytes = new byte[32];
         new SecureRandom().nextBytes(bytes);
-
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }
