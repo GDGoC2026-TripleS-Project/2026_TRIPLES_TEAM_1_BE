@@ -19,9 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "foods", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_food_name_brand", columnNames = {"food_name", "brand"})
-})
+@Table(name = "foods")
 public class Food {
 
     @Id
@@ -32,7 +30,6 @@ public class Food {
     private String foodName;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Brand brand;
 
     @Column(nullable = false)
