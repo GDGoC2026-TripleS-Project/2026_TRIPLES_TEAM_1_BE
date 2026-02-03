@@ -1,0 +1,42 @@
+package gdg.beforeonebite.app.admin.service;
+
+import gdg.beforeonebite.app.admin.dto.FoodAddDto;
+import gdg.beforeonebite.app.admin.dto.FoodAddResult;
+import gdg.beforeonebite.app.food.domain.Food;
+import gdg.beforeonebite.app.food.repository.FoodRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class AdminService {
+
+    private final FoodRepository foodRepository;
+
+    @Transactional
+    public FoodAddResult addFood(List<FoodAddDto> list) {
+        int saved = 0;
+        int skipped = 0;
+
+        for (FoodAddDto dto : list) {
+            if (foodRepository.existsByFoodNameAndCategory(dto.foodName(), dto.category())) {
+                skipped++;
+                continue;
+            }
+
+            foodRepository.save(
+                    Food.builder()
+                            .foodName(dto.foodName())
+                            .category(dto.category())
+                            .build()
+            );
+            saved++;
+        }
+
+        return new FoodAddResult(saved, skipped);
+    }
+
+}
