@@ -2,14 +2,12 @@ package gdg.beforeonebite.app.auth.service.kakao;
 
 import gdg.beforeonebite.app.auth.domain.OAuthProvider;
 import gdg.beforeonebite.app.auth.domain.User;
+import gdg.beforeonebite.app.auth.dto.TokenReissueResult;
 import gdg.beforeonebite.app.auth.dto.kakao.KakaoTokenResponse;
 import gdg.beforeonebite.app.auth.dto.kakao.KakaoUserInfoResponse;
-import gdg.beforeonebite.app.auth.jwt.TokenProvider;
 import gdg.beforeonebite.app.auth.repository.UserRepository;
 import gdg.beforeonebite.app.auth.service.AuthService;
 import gdg.beforeonebite.app.auth.util.CookieUtil;
-import gdg.beforeonebite.global.exception.ErrorMessage;
-import gdg.beforeonebite.global.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
