@@ -4,6 +4,8 @@ import gdg.beforeonebite.app.admin.dto.brand.BrandAddDto;
 import gdg.beforeonebite.app.admin.dto.brand.BrandAddResult;
 import gdg.beforeonebite.app.admin.dto.food.FoodAddDto;
 import gdg.beforeonebite.app.admin.dto.food.FoodAddResult;
+import gdg.beforeonebite.app.admin.dto.foodbrand.FoodBrandAddDto;
+import gdg.beforeonebite.app.admin.dto.foodbrand.FoodBrandAddResult;
 import gdg.beforeonebite.app.admin.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,5 +31,10 @@ public class AdminController {
     @PostMapping("/brand")
     public ResponseEntity<BrandAddResult> addBrand(@RequestBody List<BrandAddDto> list) {
         return ResponseEntity.ok(adminService.addBrand(list));
+    }
+
+    @PostMapping("/foodbrand")
+    public ResponseEntity<FoodBrandAddResult> addFoodBrand(@RequestBody List<FoodBrandAddDto> list) {
+        return ResponseEntity.ok(adminService.addFoodBrand(list));
     }
 }
