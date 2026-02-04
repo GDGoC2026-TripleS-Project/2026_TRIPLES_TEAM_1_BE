@@ -37,25 +37,14 @@ public class AdminService {
     private final FoodBrandRepository foodBrandRepository;
 
     public FoodAddResult addFood(List<FoodAddDto> list) {
-        int saved = 0;
-        int skipped = 0;
-
-        for (FoodAddDto dto : list) {
-            if (foodRepository.existsByFoodNameAndCategory(dto.foodName(), dto.category())) {
-                skipped++;
-                continue;
-            }
-
-            foodRepository.save(
-                    Food.builder()
-                            .foodName(dto.foodName())
-                            .category(dto.category())
-                            .build()
-            );
-            saved++;
+        if (list == null || list.isEmpty()) {
+            return new FoodAddResult(0, 0);
         }
 
-        return new FoodAddResult(saved, skipped);
+        Set<FoodAddDto> requestedKeys = extractFoodKeys(list);
+        Set<FoodAddDto> existingKeys = loadExistingFoodKeys(requestedKeys);
+
+        return saveFoods(list, existingKeys);
     }
 
     public BrandAddResult addBrand(List<BrandAddDto> list) {
@@ -96,6 +85,63 @@ public class AdminService {
                 loadExistingFoodBrandKeys(idBundle.foodIds(), idBundle.brandIds());
 
         return processFoodBrands(list, foodMap, brandMap, existingKeys);
+    }
+
+    private Set<FoodAddDto> extractFoodKeys(List<FoodAddDto> list) {
+        return new HashSet<>(list);
+    }
+
+    private Set<FoodAddDto> loadExistingFoodKeys(Set<FoodAddDto> requestedKeys) {
+        Set<String> foodNames = new HashSet<>();
+        Set<String> categories = new HashSet<>();
+
+        for (FoodAddDto key : requestedKeys) {
+            foodNames.add(key.foodName());
+            categories.add(key.category());
+        }
+
+        List<Food> existingFoods =
+                foodRepository.findAllByFoodNameInAndCategoryIn(foodNames, categories);
+
+        Set<FoodAddDto> existingKeys = new HashSet<>();
+        for (Food food : existingFoods) {
+            existingKeys.add(
+                    new FoodAddDto(food.getFoodName(), food.getCategory())
+            );
+        }
+
+        return existingKeys;
+    }
+
+    private FoodAddResult saveFoods(
+            List<FoodAddDto> list,
+            Set<FoodAddDto> existingKeys
+    ) {
+        Set<FoodAddDto> seenKeys = new HashSet<>();
+        List<Food> toSave = new ArrayList<>();
+
+        int saved = 0;
+        int skipped = 0;
+
+        for (FoodAddDto dto : list) {
+
+            // 입력 중복 OR DB 중복
+            if (!seenKeys.add(dto) || existingKeys.contains(dto)) {
+                skipped++;
+                continue;
+            }
+
+            toSave.add(
+                    Food.builder()
+                            .foodName(dto.foodName())
+                            .category(dto.category())
+                            .build()
+            );
+            saved++;
+        }
+
+        foodRepository.saveAll(toSave);
+        return new FoodAddResult(saved, skipped);
     }
 
     private IdBundle extractIds(List<FoodBrandAddDto> list) {
