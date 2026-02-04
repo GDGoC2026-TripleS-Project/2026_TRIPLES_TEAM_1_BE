@@ -49,3 +49,6 @@ auth:
 springdoc:
   swagger-ui:
     path: /
+
+server:
+  forward-headers-strategy: framework
