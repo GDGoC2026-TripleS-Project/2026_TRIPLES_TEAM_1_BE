@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,24 +49,14 @@ public class AdminService {
     }
 
     public BrandAddResult addBrand(List<BrandAddDto> list) {
-        int saved = 0;
-        int skipped = 0;
-
-        for (BrandAddDto dto : list) {
-            if (brandRepository.existsByBrandName(dto.brandName())) {
-                skipped++;
-                continue;
-            }
-
-            brandRepository.save(
-                    Brand.builder()
-                            .brandName(dto.brandName())
-                            .build()
-            );
-            saved++;
+        if (list == null || list.isEmpty()) {
+            return new BrandAddResult(0, 0);
         }
 
-        return new BrandAddResult(saved, skipped);
+        Set<String> brandNames = extractBrandNames(list);
+        Set<String> existingNames = loadExistingBrandNames(brandNames);
+
+        return saveBrands(list, existingNames);
     }
 
     public FoodBrandAddResult addFoodBrand(List<FoodBrandAddDto> list) {
@@ -125,7 +116,6 @@ public class AdminService {
 
         for (FoodAddDto dto : list) {
 
-            // 입력 중복 OR DB 중복
             if (!seenKeys.add(dto) || existingKeys.contains(dto)) {
                 skipped++;
                 continue;
@@ -142,6 +132,55 @@ public class AdminService {
 
         foodRepository.saveAll(toSave);
         return new FoodAddResult(saved, skipped);
+    }
+
+    private Set<String> extractBrandNames(List<BrandAddDto> list) {
+        return list.stream()
+                .map(BrandAddDto::brandName)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> loadExistingBrandNames(Set<String> brandNames) {
+        List<Brand> existingBrands =
+                brandRepository.findAllByBrandNameIn(brandNames);
+
+        Set<String> existingNames = new HashSet<>();
+        for (Brand brand : existingBrands) {
+            existingNames.add(brand.getBrandName());
+        }
+
+        return existingNames;
+    }
+
+    private BrandAddResult saveBrands(
+            List<BrandAddDto> list,
+            Set<String> existingNames
+    ) {
+        Set<String> seenNames = new HashSet<>();
+        List<Brand> toSave = new ArrayList<>();
+
+        int saved = 0;
+        int skipped = 0;
+
+        for (BrandAddDto dto : list) {
+            String name = dto.brandName();
+
+            // 입력 중복 OR DB 중복
+            if (!seenNames.add(name) || existingNames.contains(name)) {
+                skipped++;
+                continue;
+            }
+
+            toSave.add(
+                    Brand.builder()
+                            .brandName(name)
+                            .build()
+            );
+            saved++;
+        }
+
+        brandRepository.saveAll(toSave);
+        return new BrandAddResult(saved, skipped);
     }
 
     private IdBundle extractIds(List<FoodBrandAddDto> list) {
