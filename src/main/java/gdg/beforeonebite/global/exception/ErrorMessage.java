@@ -19,7 +19,8 @@ public enum ErrorMessage {
 
     // Food
     INVALID_SEARCH_KEYWORD("검색어는 필수입니다."),
-    FOOD_NOT_EXIST("일치하는 음식이 없습니다.");
+    FOOD_NOT_EXIST("일치하는 음식이 없습니다."),
+    BRAND_NOT_EXIST("일치하는 브랜드가 없습니다.");
 
     private final String message;
 
