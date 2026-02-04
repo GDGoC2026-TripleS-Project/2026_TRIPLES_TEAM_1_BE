@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -51,6 +52,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExternalServiceException.class)
     public ResponseEntity<ErrorResponse> externalServiceExceptionHandler(ExternalServiceException e) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> noResourceFoundException() {
+        return ResponseEntity.notFound().build();
     }
 
     @ExceptionHandler(Exception.class)
