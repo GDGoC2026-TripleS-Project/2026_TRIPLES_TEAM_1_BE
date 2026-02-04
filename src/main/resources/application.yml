@@ -38,7 +38,7 @@ app:
       redirect-uri: ${KAKAO_REDIRECT_URI}
       scope: "account_email profile_nickname"
 
-    frontend-redirect-url: https://www.naver.com # 임시
+    frontend-redirect-url: ${FRONTEND_REDIRECT_URI}
 
 auth:
   cookie:
