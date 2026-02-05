@@ -40,10 +40,11 @@ app:
 
     frontend-redirect-url: ${FRONTEND_REDIRECT_URI}
 
-  cors:
-    allowed-origins:
-      - "http://localhost:5173"
-      - "https://api.sanidine.site/" # 나중에 환경변수로 빼주세요
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  allowed-methods: ${CORS_ALLOWED_METHODS}
+  allowed-headers: ${CORS_ALLOWED_HEADERS}
+  exposed-headers: ${CORS_EXPOSED_HEADERS}
 
 auth:
   cookie:
