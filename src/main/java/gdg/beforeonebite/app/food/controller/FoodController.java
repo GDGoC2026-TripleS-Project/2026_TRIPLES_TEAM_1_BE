@@ -1,6 +1,7 @@
 package gdg.beforeonebite.app.food.controller;
 
 import gdg.beforeonebite.app.food.dto.FoodSearchResponse;
+import gdg.beforeonebite.app.food.dto.FoodSearchWithRecommendationsResponse;
 import gdg.beforeonebite.app.food.service.FoodSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,5 +20,10 @@ public class FoodController {
     @GetMapping("/search")
     public ResponseEntity<FoodSearchResponse> searchFood(@RequestParam String keyword) {
         return ResponseEntity.ok(foodSearchService.search(keyword));
+    }
+
+    @GetMapping("/search/recommendation")
+    public ResponseEntity<FoodSearchWithRecommendationsResponse> searchWithRecommendations(@RequestParam String keyword) {
+        return ResponseEntity.ok(foodSearchService.searchWithRecommendations(keyword));
     }
 }
