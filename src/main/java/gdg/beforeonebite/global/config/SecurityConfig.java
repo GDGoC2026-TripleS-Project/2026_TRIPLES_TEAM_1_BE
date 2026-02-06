@@ -4,7 +4,6 @@ import gdg.beforeonebite.app.auth.jwt.JwtFilter;
 import gdg.beforeonebite.app.auth.jwt.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -23,11 +22,21 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@EnableConfigurationProperties(CorsProperties.class)
 public class SecurityConfig {
 
     private final TokenProvider tokenProvider;
-    private final CorsProperties corsProperties;
+
+    @Value("${cors.allowed-origins}")
+    private List<String> allowedOrigins;
+
+    @Value("${cors.allowed-methods}")
+    private List<String> allowedMethods;
+
+    @Value("${cors.allowed-headers}")
+    private String allowedHeaders;
+
+    @Value("${cors.exposed-headers}")
+    private String exposedHeaders;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -51,13 +60,10 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(corsProperties.getAllowedOrigins());
-
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
-
-        config.setExposedHeaders(List.of("Set-Cookie"));
+        config.setAllowedOrigins(allowedOrigins);
+        config.setAllowedMethods(allowedMethods);
+        config.addAllowedHeader(allowedHeaders);
+        config.addExposedHeader(exposedHeaders);
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
