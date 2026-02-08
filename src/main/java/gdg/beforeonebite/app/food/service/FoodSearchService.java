@@ -54,7 +54,7 @@ public class FoodSearchService {
         FoodRecommendDto currentDto = recommendFood(current);
 
         List<FoodBrand> candidates = findCandidates(current, 1);
-        FoodRecommendDto best = candidates.isEmpty() ? null : recommendFood(candidates.get(0));
+        FoodRecommendDto best = candidates.isEmpty() ? null : recommendFood(candidates.getFirst());
 
         return FoodBestCompareResponse.builder()
                 .current(currentDto)
@@ -87,14 +87,10 @@ public class FoodSearchService {
         PageRequest pageRequest = PageRequest.of(0, limit);
 
         if (current.getBrand() != null) {
-            return foodBrandRepository.findLighterCandidatesWithBrand(
-                    current.getBrand(), category, calories, excludeId, pageRequest
-            );
+            return foodBrandRepository.findLighterCandidatesWithBrand(current.getBrand(), category, calories, excludeId, pageRequest);
         }
 
-        return foodBrandRepository.findLighterCandidatesNoBrand(
-                category, calories, excludeId, pageRequest
-        );
+        return foodBrandRepository.findLighterCandidatesNoBrand(category, calories, excludeId, pageRequest);
     }
 
     private FoodRecommendDto recommendFood(FoodBrand foodBrand) {

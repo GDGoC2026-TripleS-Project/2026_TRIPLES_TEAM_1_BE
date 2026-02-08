@@ -28,7 +28,6 @@ public class FoodController {
         return ResponseEntity.ok(foodSearchService.getBestCompare(foodBrandId));
     }
 
-    // 3) 추천 선택 더 보기(best 포함 최대 5개)
     @GetMapping("/recommend/list")
     public ResponseEntity<FoodRecommendationListResponse> recommendationList(@RequestParam Long foodBrandId) {
         return ResponseEntity.ok(foodSearchService.getRecommendationList(foodBrandId));
