@@ -5,7 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record FoodSearchResponse(
-        Long foodBrandId,   // 추가
+        Long foodBrandId,
         Long foodId,
         String foodName,
         String brand,
