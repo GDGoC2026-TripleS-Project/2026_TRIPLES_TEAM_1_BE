@@ -2,9 +2,10 @@ package gdg.beforeonebite.app.food.service;
 
 import gdg.beforeonebite.app.food.domain.FoodBrand;
 import gdg.beforeonebite.app.food.dto.CalorieGuideDto;
+import gdg.beforeonebite.app.food.dto.FoodBestCompareResponse;
 import gdg.beforeonebite.app.food.dto.FoodRecommendDto;
+import gdg.beforeonebite.app.food.dto.FoodRecommendationListResponse;
 import gdg.beforeonebite.app.food.dto.FoodSearchResponse;
-import gdg.beforeonebite.app.food.dto.FoodSearchWithRecommendationsResponse;
 import gdg.beforeonebite.app.food.repository.FoodBrandRepository;
 import gdg.beforeonebite.global.exception.BadRequestException;
 import gdg.beforeonebite.global.exception.ErrorMessage;
@@ -14,14 +15,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class FoodSearchService {
 
-    private static final int RECOMMEND_FETCH_SIZE = 5;
+    private static final int LIST_LIMIT = 5;
 
     private final FoodBrandRepository foodBrandRepository;
     private final CalorieGuidePolicy calorieGuidePolicy;
@@ -34,12 +34,10 @@ public class FoodSearchService {
         String normalized = normalize(keyword);
 
         FoodBrand foodBrand = foodBrandRepository
-                .findByFood_FoodName(normalized)
+                .findOneWithFoodAndBrandByFoodName(normalized)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
 
-        CalorieGuideDto guideDto =
-                calorieGuidePolicy.from(foodBrand.getCalories());
-
+        CalorieGuideDto guideDto = calorieGuidePolicy.from(foodBrand.getCalories());
         return FoodSearchResponse.from(foodBrand, guideDto);
     }
 
@@ -49,54 +47,44 @@ public class FoodSearchService {
 
     // 추천 음식 코드
 
-    public FoodSearchWithRecommendationsResponse searchWithRecommendations(String keyword) {
-        if (keyword == null || keyword.isBlank()) {
-            throw new BadRequestException(ErrorMessage.INVALID_SEARCH_KEYWORD);
-        }
-
-        String normalized = normalize(keyword);
-
-        FoodBrand current = foodBrandRepository
-                .findOneWithFoodAndBrandByFoodName(normalized)
+    public FoodBestCompareResponse getBestCompare(Long currentFoodBrandId) {
+        FoodBrand current = foodBrandRepository.findOneWithFoodAndBrandById(currentFoodBrandId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
 
-        FoodRecommendDto currentFood = recommendFood(current);
+        FoodRecommendDto currentDto = recommendFood(current);
 
-        List<FoodBrand> candidateFood = findCandidates(current);
+        List<FoodBrand> candidates = findCandidates(current, 1);
+        FoodRecommendDto best = candidates.isEmpty() ? null : recommendFood(candidates.get(0));
 
-        if (candidateFood.isEmpty()) {
-            return FoodSearchWithRecommendationsResponse.builder()
-                    .current(currentFood)
-                    .bestRecommendation(null)
-                    .otherRecommendations(Collections.emptyList())
-                    .build();
-        }
-
-        FoodBrand best = candidateFood.getFirst();
-        List<FoodBrand> others = candidateFood.size() > 1
-                ? candidateFood.subList(1, Math.min(candidateFood.size(), 5))
-                : Collections.emptyList();
-
-        FoodRecommendDto bestFood = recommendFood(best);
-
-        List<FoodRecommendDto> otherCards = new ArrayList<>();
-        for (FoodBrand fb : others) {
-            otherCards.add(recommendFood(fb));
-        }
-
-        return FoodSearchWithRecommendationsResponse.builder()
-                .current(currentFood)
-                .bestRecommendation(bestFood)
-                .otherRecommendations(otherCards)
+        return FoodBestCompareResponse.builder()
+                .current(currentDto)
+                .bestRecommendation(best)
                 .build();
     }
 
-    private List<FoodBrand> findCandidates(FoodBrand current) {
+    public FoodRecommendationListResponse getRecommendationList(Long currentFoodBrandId) {
+        FoodBrand current = foodBrandRepository.findOneWithFoodAndBrandById(currentFoodBrandId)
+                .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
+
+        List<FoodBrand> candidates = findCandidates(current, LIST_LIMIT);
+
+        List<FoodRecommendDto> list = new ArrayList<>();
+        for (FoodBrand fb : candidates) {
+            list.add(recommendFood(fb));
+        }
+
+        return FoodRecommendationListResponse.builder()
+                .currentFoodBrandId(current.getId())
+                .recommendations(list)
+                .build();
+    }
+
+    private List<FoodBrand> findCandidates(FoodBrand current, int limit) {
         String category = current.getFood().getCategory();
         double calories = current.getCalories();
         Long excludeId = current.getId();
 
-        PageRequest pageRequest = PageRequest.of(0, RECOMMEND_FETCH_SIZE);
+        PageRequest pageRequest = PageRequest.of(0, limit);
 
         if (current.getBrand() != null) {
             return foodBrandRepository.findLighterCandidatesWithBrand(

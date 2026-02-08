@@ -16,23 +16,23 @@ public interface FoodBrandRepository extends JpaRepository<FoodBrand, Long> {
     List<FoodBrand> findAllByFood_IdInAndBrand_IdIn(Set<Long> foodIds, Set<Long> brandIds);
 
     @Query("""
-        select fb from FoodBrand fb
-        join fetch fb.food f
-        left join fetch fb.brand b
-        where f.foodName = :foodName
-    """)
+                select fb from FoodBrand fb
+                join fetch fb.food f
+                left join fetch fb.brand b
+                where f.foodName = :foodName
+            """)
     Optional<FoodBrand> findOneWithFoodAndBrandByFoodName(String foodName);
 
     @Query("""
-        select fb from FoodBrand fb
-        join fetch fb.food f
-        left join fetch fb.brand b
-        where fb.brand = :brand
-          and f.category = :category
-          and fb.calories < :currentCalories
-          and fb.id <> :excludeFoodBrandId
-        order by fb.calories asc
-    """)
+                select fb from FoodBrand fb
+                join fetch fb.food f
+                left join fetch fb.brand b
+                where fb.brand = :brand
+                  and f.category = :category
+                  and fb.calories < :currentCalories
+                  and fb.id <> :excludeFoodBrandId
+                order by fb.calories asc
+            """)
     List<FoodBrand> findLighterCandidatesWithBrand(
             Brand brand,
             String category,
@@ -42,18 +42,26 @@ public interface FoodBrandRepository extends JpaRepository<FoodBrand, Long> {
     );
 
     @Query("""
-        select fb from FoodBrand fb
-        join fetch fb.food f
-        left join fetch fb.brand b
-        where f.category = :category
-          and fb.calories < :currentCalories
-          and fb.id <> :excludeFoodBrandId
-        order by fb.calories asc
-    """)
+                select fb from FoodBrand fb
+                join fetch fb.food f
+                left join fetch fb.brand b
+                where f.category = :category
+                  and fb.calories < :currentCalories
+                  and fb.id <> :excludeFoodBrandId
+                order by fb.calories asc
+            """)
     List<FoodBrand> findLighterCandidatesNoBrand(
             String category,
             double currentCalories,
             Long excludeFoodBrandId,
             Pageable pageable
     );
+
+    @Query("""
+                select fb from FoodBrand fb
+                join fetch fb.food f
+                left join fetch fb.brand b
+                where fb.id = :id
+            """)
+    Optional<FoodBrand> findOneWithFoodAndBrandById(Long id);
 }
