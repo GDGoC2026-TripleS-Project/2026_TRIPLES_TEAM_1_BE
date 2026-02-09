@@ -56,5 +56,5 @@ jobs:
             docker stop springboot || true
             docker rm springboot || true
             docker rmi beforeonebite-backend:latest || true
-            docker-compose build --no-cache backend
-            docker-compose up -d backend
+            docker-compose build --no-cache springboot
+            docker-compose up -d springboot
