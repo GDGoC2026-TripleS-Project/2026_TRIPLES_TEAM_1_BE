@@ -1,12 +1,17 @@
 package gdg.beforeonebite.app.food.service;
 
+import gdg.beforeonebite.app.auth.domain.AuthUser;
+import gdg.beforeonebite.app.auth.repository.UserRepository;
+import gdg.beforeonebite.app.food.domain.Food;
 import gdg.beforeonebite.app.food.domain.FoodBrand;
+import gdg.beforeonebite.app.food.domain.SearchHistory;
 import gdg.beforeonebite.app.food.dto.CalorieGuideDto;
 import gdg.beforeonebite.app.food.dto.FoodBestCompareResponse;
 import gdg.beforeonebite.app.food.dto.FoodRecommendDto;
 import gdg.beforeonebite.app.food.dto.FoodRecommendationListResponse;
 import gdg.beforeonebite.app.food.dto.FoodSearchResponse;
 import gdg.beforeonebite.app.food.repository.FoodBrandRepository;
+import gdg.beforeonebite.app.food.repository.SearchHistoryRepository;
 import gdg.beforeonebite.global.exception.BadRequestException;
 import gdg.beforeonebite.global.exception.ErrorMessage;
 import gdg.beforeonebite.global.exception.NotFoundException;
@@ -14,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +31,10 @@ public class FoodSearchService {
 
     private final FoodBrandRepository foodBrandRepository;
     private final CalorieGuidePolicy calorieGuidePolicy;
+    private final SearchHistoryRepository searchHistoryRepository;
+    private final UserRepository userRepository;
 
-    public FoodSearchResponse search(String keyword) {
+    public FoodSearchResponse search(AuthUser authUser, String keyword) {
         if (keyword == null || keyword.isBlank()) {
             throw new BadRequestException(ErrorMessage.INVALID_SEARCH_KEYWORD);
         }
@@ -38,6 +46,9 @@ public class FoodSearchService {
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
 
         CalorieGuideDto guideDto = calorieGuidePolicy.from(foodBrand.getCalories());
+
+        saveSearchHistoryIfLoggedIn(authUser, foodBrand.getFood());
+
         return FoodSearchResponse.from(foodBrand, guideDto);
     }
 
@@ -96,5 +107,19 @@ public class FoodSearchService {
     private FoodRecommendDto recommendFood(FoodBrand foodBrand) {
         CalorieGuideDto guide = calorieGuidePolicy.from(foodBrand.getCalories());
         return FoodRecommendDto.from(foodBrand, guide);
+    }
+
+    private void saveSearchHistoryIfLoggedIn(AuthUser authUser, Food food) {
+        if (authUser == null) {
+            return;
+        }
+
+        SearchHistory history = SearchHistory.builder()
+                .user(userRepository.getReferenceById(authUser.id()))
+                .food(food)
+                .searchedAt(LocalDateTime.now())
+                .build();
+
+        searchHistoryRepository.save(history);
     }
 }

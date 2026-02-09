@@ -16,6 +16,7 @@ public enum ErrorMessage {
     EXPIRED_TOKEN("만료된 토큰입니다."),
     INVALID_TOKEN("유효하지 않은 토큰입니다."),
     NO_JTI_IN_TOKEN("refresh token에 jti가 없습니다."),
+    USER_NOT_EXIST("유저가 존재하지 않습니다."),
 
     // Food
     INVALID_SEARCH_KEYWORD("검색어는 필수입니다."),
