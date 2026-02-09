@@ -31,7 +31,7 @@ public class FoodBrand {
     @JoinColumn(nullable = false)
     private Food food;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
     private Brand brand;
 }

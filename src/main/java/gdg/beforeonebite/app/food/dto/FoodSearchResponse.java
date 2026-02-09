@@ -5,6 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record FoodSearchResponse(
+        Long foodBrandId,
         Long foodId,
         String foodName,
         String brand,
@@ -13,16 +14,13 @@ public record FoodSearchResponse(
         String guideMessage,
         int walkingMinutes,
         int activityMinutes
-
 ) {
-    public static FoodSearchResponse from(
-            FoodBrand foodBrand,
-            CalorieGuideDto calorieGuideDto
-    ) {
+    public static FoodSearchResponse from(FoodBrand foodBrand, CalorieGuideDto calorieGuideDto) {
         return FoodSearchResponse.builder()
+                .foodBrandId(foodBrand.getId())
                 .foodId(foodBrand.getFood().getId())
                 .foodName(foodBrand.getFood().getFoodName())
-                .brand(foodBrand.getBrand().getBrandName())
+                .brand(foodBrand.getBrand() == null ? null : foodBrand.getBrand().getBrandName())
                 .category(foodBrand.getFood().getCategory())
                 .calories(foodBrand.getCalories())
                 .guideMessage(calorieGuideDto.message())
