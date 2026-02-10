@@ -11,6 +11,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,6 +29,12 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_search_user", columnList = "user_id"),
                 @Index(name = "idx_search_food", columnList = "food_id"),
                 @Index(name = "idx_search_searched_at", columnList = "searched_at")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_search_user_food",
+                        columnNames = {"user_id", "food_id"}
+                )
         }
 )
 public class SearchHistory {
@@ -46,4 +53,8 @@ public class SearchHistory {
 
     @Column(nullable = false)
     private LocalDateTime searchedAt;
+
+    public void updateSearchedAt(LocalDateTime time) {
+        this.searchedAt = time;
+    }
 }

@@ -1,5 +1,6 @@
 package gdg.beforeonebite.app.food.service;
 
+import gdg.beforeonebite.app.auth.domain.AuthUser;
 import gdg.beforeonebite.app.food.domain.FoodBrand;
 import gdg.beforeonebite.app.food.dto.CalorieGuideDto;
 import gdg.beforeonebite.app.food.dto.FoodBestCompareResponse;
@@ -13,6 +14,7 @@ import gdg.beforeonebite.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +27,10 @@ public class FoodSearchService {
 
     private final FoodBrandRepository foodBrandRepository;
     private final CalorieGuidePolicy calorieGuidePolicy;
+    private final SearchHistoryService searchHistoryService;
 
-    public FoodSearchResponse search(String keyword) {
+    @Transactional
+    public FoodSearchResponse search(AuthUser authUser, String keyword) {
         if (keyword == null || keyword.isBlank()) {
             throw new BadRequestException(ErrorMessage.INVALID_SEARCH_KEYWORD);
         }
@@ -38,6 +42,9 @@ public class FoodSearchService {
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
 
         CalorieGuideDto guideDto = calorieGuidePolicy.from(foodBrand.getCalories());
+
+        searchHistoryService.saveSearchHistory(authUser, foodBrand.getFood());
+
         return FoodSearchResponse.from(foodBrand, guideDto);
     }
 
@@ -47,6 +54,7 @@ public class FoodSearchService {
 
     // 추천 음식 코드
 
+    @Transactional(readOnly = true)
     public FoodBestCompareResponse getBestCompare(Long currentFoodBrandId) {
         FoodBrand current = foodBrandRepository.findOneWithFoodAndBrandById(currentFoodBrandId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
@@ -62,6 +70,7 @@ public class FoodSearchService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public FoodRecommendationListResponse getRecommendationList(Long currentFoodBrandId) {
         FoodBrand current = foodBrandRepository.findOneWithFoodAndBrandById(currentFoodBrandId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));

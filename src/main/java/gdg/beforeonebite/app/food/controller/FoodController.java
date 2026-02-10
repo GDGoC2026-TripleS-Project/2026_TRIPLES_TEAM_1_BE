@@ -1,11 +1,13 @@
 package gdg.beforeonebite.app.food.controller;
 
+import gdg.beforeonebite.app.auth.domain.AuthUser;
 import gdg.beforeonebite.app.food.dto.FoodBestCompareResponse;
 import gdg.beforeonebite.app.food.dto.FoodRecommendationListResponse;
 import gdg.beforeonebite.app.food.dto.FoodSearchResponse;
 import gdg.beforeonebite.app.food.service.FoodSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,8 +21,11 @@ public class FoodController {
     private final FoodSearchService foodSearchService;
 
     @GetMapping("/search")
-    public ResponseEntity<FoodSearchResponse> searchFood(@RequestParam String keyword) {
-        return ResponseEntity.ok(foodSearchService.search(keyword));
+    public ResponseEntity<FoodSearchResponse> searchFood(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam String keyword
+    ) {
+        return ResponseEntity.ok(foodSearchService.search(authUser, keyword));
     }
 
     @GetMapping("/recommend/best")
