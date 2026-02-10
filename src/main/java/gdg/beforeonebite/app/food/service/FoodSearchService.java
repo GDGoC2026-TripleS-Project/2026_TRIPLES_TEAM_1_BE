@@ -18,6 +18,7 @@ import gdg.beforeonebite.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ public class FoodSearchService {
     private final SearchHistoryRepository searchHistoryRepository;
     private final UserRepository userRepository;
 
+    @Transactional(readOnly = true)
     public FoodSearchResponse search(AuthUser authUser, String keyword) {
         if (keyword == null || keyword.isBlank()) {
             throw new BadRequestException(ErrorMessage.INVALID_SEARCH_KEYWORD);
@@ -58,6 +60,7 @@ public class FoodSearchService {
 
     // 추천 음식 코드
 
+    @Transactional(readOnly = true)
     public FoodBestCompareResponse getBestCompare(Long currentFoodBrandId) {
         FoodBrand current = foodBrandRepository.findOneWithFoodAndBrandById(currentFoodBrandId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
@@ -73,6 +76,7 @@ public class FoodSearchService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public FoodRecommendationListResponse getRecommendationList(Long currentFoodBrandId) {
         FoodBrand current = foodBrandRepository.findOneWithFoodAndBrandById(currentFoodBrandId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
@@ -109,7 +113,8 @@ public class FoodSearchService {
         return FoodRecommendDto.from(foodBrand, guide);
     }
 
-    private void saveSearchHistoryIfLoggedIn(AuthUser authUser, Food food) {
+    @Transactional
+    protected void saveSearchHistoryIfLoggedIn(AuthUser authUser, Food food) {
         if (authUser == null) return;
 
         Long userId = authUser.id();
