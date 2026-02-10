@@ -110,16 +110,22 @@ public class FoodSearchService {
     }
 
     private void saveSearchHistoryIfLoggedIn(AuthUser authUser, Food food) {
-        if (authUser == null) {
-            return;
-        }
+        if (authUser == null) return;
 
-        SearchHistory history = SearchHistory.builder()
-                .user(userRepository.getReferenceById(authUser.id()))
-                .food(food)
-                .searchedAt(LocalDateTime.now())
-                .build();
+        Long userId = authUser.id();
+        Long foodId = food.getId();
 
-        searchHistoryRepository.save(history);
+        searchHistoryRepository.findByUserIdAndFoodId(userId, foodId)
+                .ifPresentOrElse(
+                        history -> history.updateSearchedAt(LocalDateTime.now()),
+                        () -> {
+                            SearchHistory history = SearchHistory.builder()
+                                    .user(userRepository.getReferenceById(userId))
+                                    .food(food)
+                                    .searchedAt(LocalDateTime.now())
+                                    .build();
+                            searchHistoryRepository.save(history);
+                        }
+                );
     }
 }
