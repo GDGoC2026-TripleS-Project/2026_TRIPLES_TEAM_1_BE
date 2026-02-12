@@ -15,7 +15,7 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
-        show_sql: true
+        show_sql: false
         format_sql: false
     open-in-view: false
 
@@ -48,13 +48,22 @@ cors:
 
 auth:
   cookie:
-    secure: false
+    secure: true
     refresh-max-age: 604800
     same-site: None
 
 springdoc:
   swagger-ui:
     path: /
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 server:
   forward-headers-strategy: framework

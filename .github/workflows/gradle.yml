@@ -68,45 +68,59 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             set -euo pipefail
-
-            BASE_DIR="/home/${{ secrets.REMOTE_USERNAME }}/Docker/2026_TRIPLES_TEAM_1_BE"
-            cd "$BASE_DIR"
-
-            if grep -q "springboot-blue:9001" nginx/default.conf; then
-              CURRENT="blue"
-              NEXT="green"
+            
+            BASE="/home/${{ secrets.REMOTE_USERNAME }}/Docker/2026_TRIPLES_TEAM_1_BE"
+            CONF="$BASE/nginx/default.conf"
+            
+            cd $BASE
+            
+            if [ ! -f "$CONF" ]; then
+              echo "nginx config not found"
+              exit 1
+            fi
+            
+            if grep -q "springboot-blue:9001" "$CONF"; then
+              CURRENT=blue
+              NEXT=green
               NEXT_PORT=9002
             else
-              CURRENT="green"
-              NEXT="blue"
+              CURRENT=green
+              NEXT=blue
               NEXT_PORT=9001
             fi
-
-            echo "CURRENT=$CURRENT"
-            echo "NEXT=$NEXT"
-
+            
+            echo "Switching $CURRENT → $NEXT"
+            
             docker compose build --no-cache springboot-$NEXT
+            
             docker compose up -d springboot-$NEXT
-
-            echo "Health checking..."
-            for i in {1..40}; do
-              if docker exec springboot-$NEXT curl -fsS http://localhost:$NEXT_PORT/actuator/health | grep -q '"status":"UP"'; then
-                echo "Health check OK"
+            
+            NET=$(docker inspect springboot-$NEXT --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}')
+            
+            HEALTH_OK=false
+  
+            for i in {1..30}; do
+              if docker run --rm --network "$NET" curlimages/curl:8.7.1 -fsS \
+                http://springboot-$NEXT:$NEXT_PORT/actuator/health \
+                | grep -q '"status":"UP"'; then
+                echo "Health OK"
+                HEALTH_OK=true
                 break
               fi
               sleep 3
-              if [ "$i" -eq 40 ]; then
-                echo "Health check FAILED"
-                docker logs springboot-$NEXT
-                exit 1
-              fi
             done
-
-            sed -i "s/server springboot-$CURRENT:[0-9]\+;/server springboot-$NEXT:$NEXT_PORT;/" nginx/default.conf
-
+            
+            if [ "$HEALTH_OK" != "true" ]; then
+              echo "Health check FAILED"
+              docker logs springboot-$NEXT
+              exit 1
+            fi
+            
+            sed -i "s/server springboot-\(blue\|green\):[0-9]\+;/server springboot-$NEXT:$NEXT_PORT;/" $CONF
+            
             docker exec nginx nginx -t
             docker exec nginx nginx -s reload
-
+            
             docker compose stop springboot-$CURRENT
-
-            echo "Deploy complete ($CURRENT → $NEXT)"
+            
+            echo "Deploy Complete"
