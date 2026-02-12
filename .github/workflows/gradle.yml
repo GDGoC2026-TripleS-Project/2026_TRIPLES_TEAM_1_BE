@@ -43,7 +43,23 @@ jobs:
           source: "app.jar,Dockerfile,docker-compose.yml"
           target: "/home/${{ secrets.REMOTE_USERNAME }}/Docker/2026_TRIPLES_TEAM_1_BE"
 
-      - name: Restart Docker (build backend image)
+      #      - name: Restart Docker (build backend image)
+      #        uses: appleboy/ssh-action@master
+      #        with:
+      #          host: ${{ secrets.REMOTE_IP }}
+      #          username: ${{ secrets.REMOTE_USERNAME }}
+      #          key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #          port: ${{ secrets.SSH_PORT }}
+      #          script: |
+      #            set -e
+      #            cd /home/${{ secrets.REMOTE_USERNAME }}/Docker
+      #            docker stop springboot || true
+      #            docker rm springboot || true
+      #            docker rmi beforeonebite-backend:latest || true
+      #            docker-compose build --no-cache backend
+      #            docker-compose up -d backend
+
+      - name: Blue-Green Deploy
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.REMOTE_IP }}
@@ -51,10 +67,46 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            set -e
-            cd /home/${{ secrets.REMOTE_USERNAME }}/Docker
-            docker stop springboot || true
-            docker rm springboot || true
-            docker rmi beforeonebite-backend:latest || true
-            docker-compose build --no-cache springboot
-            docker-compose up -d springboot
+            set -euo pipefail
+
+            BASE_DIR="/home/${{ secrets.REMOTE_USERNAME }}/Docker/2026_TRIPLES_TEAM_1_BE"
+            cd "$BASE_DIR"
+
+            if grep -q "springboot-blue:9001" nginx/default.conf; then
+              CURRENT="blue"
+              NEXT="green"
+              NEXT_PORT=9002
+            else
+              CURRENT="green"
+              NEXT="blue"
+              NEXT_PORT=9001
+            fi
+
+            echo "CURRENT=$CURRENT"
+            echo "NEXT=$NEXT"
+
+            docker compose build --no-cache springboot-$NEXT
+            docker compose up -d springboot-$NEXT
+
+            echo "Health checking..."
+            for i in {1..40}; do
+              if docker exec springboot-$NEXT curl -fsS http://localhost:$NEXT_PORT/actuator/health | grep -q '"status":"UP"'; then
+                echo "Health check OK"
+                break
+              fi
+              sleep 3
+              if [ "$i" -eq 40 ]; then
+                echo "Health check FAILED"
+                docker logs springboot-$NEXT
+                exit 1
+              fi
+            done
+
+            sed -i "s/server springboot-$CURRENT:[0-9]\+;/server springboot-$NEXT:$NEXT_PORT;/" nginx/default.conf
+
+            docker exec nginx nginx -t
+            docker exec nginx nginx -s reload
+
+            docker compose stop springboot-$CURRENT
+
+            echo "Deploy complete ($CURRENT → $NEXT)"
