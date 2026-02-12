@@ -70,7 +70,7 @@ jobs:
             set -euo pipefail
             
             BASE="/home/${{ secrets.REMOTE_USERNAME }}/Docker/2026_TRIPLES_TEAM_1_BE"
-            CONF="$BASE/nginx/default.conf"
+            CONF="/home/${{ secrets.REMOTE_USERNAME }}/Docker/nginx/default.conf"
             
             cd $BASE
             
