@@ -53,4 +53,11 @@ public class SearchHistoryService {
                 PageRequest.of(0, 15)
         );
     }
+
+    public int deleteOldSearchHistory() {
+
+        LocalDateTime fiveDaysAgo = LocalDateTime.now().minusDays(5);
+
+        return searchHistoryRepository.deleteOldSearchHistory(fiveDaysAgo);
+    }
 }
