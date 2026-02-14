@@ -35,11 +35,7 @@ public class FoodSearchService {
             throw new BadRequestException(ErrorMessage.INVALID_SEARCH_KEYWORD);
         }
 
-        String normalized = normalize(keyword);
-
-        FoodBrand foodBrand = foodBrandRepository
-                .findOneWithFoodAndBrandByFoodName(normalized)
-                .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
+        FoodBrand foodBrand = findFoodBrandFromFoodName(keyword);
 
         CalorieGuideDto guideDto = calorieGuidePolicy.from(foodBrand.getCalories());
 
@@ -105,5 +101,13 @@ public class FoodSearchService {
     private FoodRecommendDto recommendFood(FoodBrand foodBrand) {
         CalorieGuideDto guide = calorieGuidePolicy.from(foodBrand.getCalories());
         return FoodRecommendDto.from(foodBrand, guide);
+    }
+
+    public FoodBrand findFoodBrandFromFoodName(String foodName) {
+        String normalized = normalize(foodName);
+
+        return foodBrandRepository
+                .findOneWithFoodAndBrandByFoodName(normalized)
+                .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
     }
 }

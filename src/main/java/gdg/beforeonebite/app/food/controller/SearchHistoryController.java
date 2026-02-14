@@ -1,12 +1,14 @@
 package gdg.beforeonebite.app.food.controller;
 
 import gdg.beforeonebite.app.auth.domain.AuthUser;
+import gdg.beforeonebite.app.food.dto.AddHistoryDto;
 import gdg.beforeonebite.app.food.service.SearchHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,9 +43,29 @@ public class SearchHistoryController {
             @ApiResponse(responseCode = "200", description = "검색기록 반환 성공"),
             @ApiResponse(responseCode = "500", description = "서버 에러, 관리자에게 문의")
     })
-    public List<String> getRecentSearchHistory(
+    public ResponseEntity<List<String>> getRecentSearchHistory(
             @AuthenticationPrincipal AuthUser authUser
     ) {
-        return searchHistoryService.getRecentSearchFoodNames(authUser);
+        return ResponseEntity.ok(searchHistoryService.getRecentSearchFoodNames(authUser));
+    }
+
+    @PostMapping("/add")
+    @Operation(
+            summary = "로그인 직전의 검색기록 추가",
+            description =
+                    """
+                    토큰으로 식별된 사용자가 로그인 직전 검색했던 검색어를 저장합니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "검색기록 저장 성공"),
+            @ApiResponse(responseCode = "500", description = "서버 에러, 관리자에게 문의")
+    })
+    public ResponseEntity<Void> addSearchHistory(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody AddHistoryDto addHistoryDto
+            ) {
+        searchHistoryService.addHistoryBeforeLogin(authUser, addHistoryDto);
+        return ResponseEntity.ok().build();
     }
 }
