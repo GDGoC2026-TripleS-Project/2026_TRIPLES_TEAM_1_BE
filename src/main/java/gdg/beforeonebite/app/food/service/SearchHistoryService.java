@@ -6,10 +6,12 @@ import gdg.beforeonebite.app.food.domain.Food;
 import gdg.beforeonebite.app.food.domain.SearchHistory;
 import gdg.beforeonebite.app.food.repository.SearchHistoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,5 +39,25 @@ public class SearchHistoryService {
                             searchHistoryRepository.save(history);
                         }
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getRecentSearchFoodNames(AuthUser authUser) {
+
+        if (authUser == null) {
+            return List.of();
+        }
+
+        return searchHistoryRepository.findTop15FoodNamesByUserId(
+                authUser.id(),
+                PageRequest.of(0, 15)
+        );
+    }
+
+    public int deleteOldSearchHistory() {
+
+        LocalDateTime fiveDaysAgo = LocalDateTime.now().minusDays(5);
+
+        return searchHistoryRepository.deleteOldSearchHistory(fiveDaysAgo);
     }
 }
