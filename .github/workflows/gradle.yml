@@ -68,14 +68,14 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             set -euo pipefail
-            
+  
             BASE="/home/${{ secrets.REMOTE_USERNAME }}/Docker/2026_TRIPLES_TEAM_1_BE"
             CONF="/home/${{ secrets.REMOTE_USERNAME }}/Docker/nginx/default.conf"
             
-            cd $BASE
+            cd "$BASE"
             
             if [ ! -f "$CONF" ]; then
-              echo "nginx config not found"
+              echo "❌ nginx config not found"
               exit 1
             fi
             
@@ -89,38 +89,51 @@ jobs:
               NEXT_PORT=9001
             fi
             
-            echo "Switching $CURRENT → $NEXT"
+            echo "🚀 Switching $CURRENT → $NEXT"
             
             docker compose build --no-cache springboot-$NEXT
             
             docker compose up -d springboot-$NEXT
             
-            NET=$(docker inspect springboot-$NEXT --format='{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}')
+            sleep 5
             
             HEALTH_OK=false
-  
+            
             for i in {1..30}; do
-              if docker run --rm --network "$NET" curlimages/curl:8.7.1 -fsS \
-                http://springboot-$NEXT:$NEXT_PORT/actuator/health \
-                | grep -q '"status":"UP"'; then
-                echo "Health OK"
-                HEALTH_OK=true
-                break
-              fi
-              sleep 3
+            if docker exec springboot-$NEXT \
+              sh -c "wget -qO- http://localhost:$NEXT_PORT/actuator/health 2>/dev/null" \
+              | grep -q '"status":"UP"'; then
+              echo "✅ Health OK"
+              HEALTH_OK=true
+              break
+            fi
+            sleep 3
             done
             
             if [ "$HEALTH_OK" != "true" ]; then
-              echo "Health check FAILED"
+              echo "❌ Health check FAILED"
               docker logs springboot-$NEXT
+              docker compose stop springboot-$NEXT
               exit 1
             fi
             
-            sed -i "s/server springboot-\(blue\|green\):[0-9]\+;/server springboot-$NEXT:$NEXT_PORT;/" $CONF
+            sed -i "s/server springboot-\(blue\|green\):[0-9]\+;/server springboot-$NEXT:$NEXT_PORT;/" "$CONF"
             
-            docker exec nginx nginx -t
+            if ! grep -q "springboot-$NEXT:$NEXT_PORT" "$CONF"; then
+              echo "❌ nginx upstream 변경 실패"
+              docker compose stop springboot-$NEXT
+              exit 1
+            fi
+            
+            if ! docker exec nginx nginx -t; then
+              echo "❌ nginx config test failed"
+              docker compose stop springboot-$NEXT
+              exit 1
+            fi
+            
+            # nginx reload
             docker exec nginx nginx -s reload
             
             docker compose stop springboot-$CURRENT
             
-            echo "Deploy Complete"
+            echo "🎉 Deploy Complete"
