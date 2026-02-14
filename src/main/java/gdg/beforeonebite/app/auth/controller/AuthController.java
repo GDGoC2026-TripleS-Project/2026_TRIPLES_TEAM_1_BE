@@ -4,6 +4,10 @@ import gdg.beforeonebite.app.auth.dto.TokenReissueResult;
 import gdg.beforeonebite.app.auth.service.AuthService;
 import gdg.beforeonebite.app.auth.util.CookieUtil;
 import gdg.beforeonebite.global.exception.UnauthorizedException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
+@Tag(
+        name = "인증 API",
+        description = "인증 및 토큰 관리 API"
+)
 public class AuthController {
 
     private final AuthService authService;
@@ -31,6 +39,18 @@ public class AuthController {
     private String cookieSameSite;
 
     @PostMapping("/reissue")
+    @Operation(
+            summary = "AccessToken 재발급",
+            description =
+                    """
+                    HttpOnly RefreshToken 쿠키를 기반으로 새로운 AccessToken을 발급합니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "재발급 성공"),
+            @ApiResponse(responseCode = "401", description = "RefreshToken이 유효하지 않음"),
+            @ApiResponse(responseCode = "500", description = "서버 에러, 관리자에게 문의")
+    })
     public ResponseEntity<AccessTokenResponse> reissue(HttpServletRequest request, HttpServletResponse response) {
         try {
             String refresh = CookieUtil.getRefreshToken(request);
@@ -45,6 +65,18 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @Operation(
+            summary = "로그아웃",
+            description =
+                    """
+                    RefreshToken을 무효화하고 쿠키를 삭제합니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "로그아웃 성공"),
+            @ApiResponse(responseCode = "400", description = "올바른 RefreshToken이 아님"),
+            @ApiResponse(responseCode = "500", description = "서버 에러, 관리자에게 문의")
+    })
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         String refresh = CookieUtil.getRefreshToken(request);
         authService.logout(refresh);
