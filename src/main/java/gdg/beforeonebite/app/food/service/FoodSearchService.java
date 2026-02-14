@@ -2,6 +2,7 @@ package gdg.beforeonebite.app.food.service;
 
 import gdg.beforeonebite.app.auth.domain.AuthUser;
 import gdg.beforeonebite.app.food.domain.FoodBrand;
+import gdg.beforeonebite.app.food.dto.AddHistoryDto;
 import gdg.beforeonebite.app.food.dto.CalorieGuideDto;
 import gdg.beforeonebite.app.food.dto.FoodBestCompareResponse;
 import gdg.beforeonebite.app.food.dto.FoodRecommendDto;
@@ -84,6 +85,18 @@ public class FoodSearchService {
                 .build();
     }
 
+    @Transactional
+    public void addHistoryBeforeLogin(AuthUser authUser, AddHistoryDto dto) {
+
+        if (authUser == null) {
+            throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
+        }
+
+        FoodBrand foodBrand = findFoodBrandFromFoodName(dto.foodName());
+
+        searchHistoryService.saveSearchHistory(authUser, foodBrand.getFood());
+    }
+
     private List<FoodBrand> findCandidates(FoodBrand current, int limit) {
         String category = current.getFood().getCategory();
         double calories = current.getCalories();
@@ -103,7 +116,7 @@ public class FoodSearchService {
         return FoodRecommendDto.from(foodBrand, guide);
     }
 
-    public FoodBrand findFoodBrandFromFoodName(String foodName) {
+    private FoodBrand findFoodBrandFromFoodName(String foodName) {
         String normalized = normalize(foodName);
 
         return foodBrandRepository

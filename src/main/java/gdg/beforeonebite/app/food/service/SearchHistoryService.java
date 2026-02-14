@@ -24,7 +24,6 @@ public class SearchHistoryService {
 
     private final SearchHistoryRepository searchHistoryRepository;
     private final UserRepository userRepository;
-    private final FoodSearchService foodSearchService;
 
     public void saveSearchHistory(AuthUser authUser, Food food) {
         if (authUser == null) return;
@@ -64,14 +63,5 @@ public class SearchHistoryService {
         LocalDateTime fiveDaysAgo = LocalDateTime.now().minusDays(5);
 
         return searchHistoryRepository.deleteOldSearchHistory(fiveDaysAgo);
-    }
-
-    @Transactional
-    public void addHistoryBeforeLogin(AuthUser authUser, AddHistoryDto addHistoryDto) {
-        if (authUser == null) throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
-
-        FoodBrand foodBrand = foodSearchService.findFoodBrandFromFoodName(addHistoryDto.foodName());
-
-        saveSearchHistory(authUser, foodBrand.getFood());
     }
 }

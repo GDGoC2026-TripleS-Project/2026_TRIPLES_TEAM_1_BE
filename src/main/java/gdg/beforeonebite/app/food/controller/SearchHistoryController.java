@@ -2,6 +2,7 @@ package gdg.beforeonebite.app.food.controller;
 
 import gdg.beforeonebite.app.auth.domain.AuthUser;
 import gdg.beforeonebite.app.food.dto.AddHistoryDto;
+import gdg.beforeonebite.app.food.service.FoodSearchService;
 import gdg.beforeonebite.app.food.service.SearchHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,6 +25,7 @@ import java.util.List;
 public class SearchHistoryController {
 
     private final SearchHistoryService searchHistoryService;
+    private final FoodSearchService foodSearchService;
 
     @GetMapping("/recent")
     @Operation(
@@ -65,7 +67,7 @@ public class SearchHistoryController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody AddHistoryDto addHistoryDto
             ) {
-        searchHistoryService.addHistoryBeforeLogin(authUser, addHistoryDto);
+        foodSearchService.addHistoryBeforeLogin(authUser, addHistoryDto);
         return ResponseEntity.ok().build();
     }
 }
