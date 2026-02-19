@@ -33,10 +33,10 @@ public class SecurityConfig {
     private List<String> allowedMethods;
 
     @Value("${cors.allowed-headers}")
-    private String allowedHeaders;
+    private List<String> allowedHeaders;
 
     @Value("${cors.exposed-headers}")
-    private String exposedHeaders;
+    private List<String> exposedHeaders;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -62,8 +62,8 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(allowedMethods);
-        config.addAllowedHeader(allowedHeaders);
-        config.addExposedHeader(exposedHeaders);
+        config.setAllowedHeaders(allowedHeaders);
+        config.setExposedHeaders(exposedHeaders);
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
