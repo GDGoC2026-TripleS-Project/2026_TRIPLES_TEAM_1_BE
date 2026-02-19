@@ -19,7 +19,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "foods")
+@Table(
+        name = "foods",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_food_food_name",
+                        columnNames = "food_name"
+                )
+        })
 public class Food {
 
     @Id
