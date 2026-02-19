@@ -95,7 +95,7 @@ public class FoodSelectionService {
 
         LocalDate today = LocalDate.now(clock);
 
-        if (!foodSelection.getSelectedDate().equals(today)) {
+        if (!today.equals(foodSelection.getSelectedDate())) {
             throw new BadRequestException(ErrorMessage.TODAY_ONLY_DELETABLE);
         }
 

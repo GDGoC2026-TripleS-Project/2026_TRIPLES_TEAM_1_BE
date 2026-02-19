@@ -7,28 +7,25 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface FoodSelectionRepository extends JpaRepository<FoodSelection, Long> {
 
     @Query("""
-        select fs from FoodSelection fs
-        join fetch fs.foodBrand fb
-        join fetch fb.food f
-        left join fetch fb.brand b
-        where fs.user.id = :userId
-          and fs.selectedDate >= :fromDate
-        order by fs.selectedAt desc
-    """)
+                select fs from FoodSelection fs
+                join fetch fs.foodBrand fb
+                join fetch fb.food f
+                left join fetch fb.brand b
+                where fs.user.id = :userId
+                  and fs.selectedDate >= :fromDate
+                order by fs.selectedAt desc
+            """)
     List<FoodSelection> findAllWithFoodBrandByUserAndDateFrom(Long userId, LocalDate fromDate);
-
-    long deleteByIdAndUser_IdAndSelectedDate(Long id, Long userId, LocalDate selectedDate);
 
     @Modifying
     @Query("""
-    delete from FoodSelection fs
-    where fs.selectedDate < :cutoffDate
-""")
+                delete from FoodSelection fs
+                where fs.selectedDate < :cutoffDate
+            """)
     void deleteBySelectedDateBefore(@Param("cutoffDate") LocalDate cutoffDate);
 }
