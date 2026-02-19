@@ -22,7 +22,7 @@ public interface FoodBrandRepository extends JpaRepository<FoodBrand, Long> {
                 where replace(f.foodName, ' ', '') = :foodName
                 order by fb.calories asc
             """)
-    Optional<FoodBrand> findByFoodNameOrderByCaloriesAsc(String foodName, Pageable pageable);
+    List<FoodBrand> findByFoodNameOrderByCaloriesAsc(String foodName, Pageable pageable);
 
     @Query("""
                 select fb from FoodBrand fb
