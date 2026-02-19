@@ -83,18 +83,23 @@ public class FoodSelectionService {
         }
 
         if (selectionId == null) {
-            throw new BadRequestException(ErrorMessage.SELECTION_NOT_FOUND);
+            throw new BadRequestException(ErrorMessage.INVALID_REQUEST);
+        }
+
+        FoodSelection foodSelection = foodSelectionRepository.findById(selectionId)
+                .orElseThrow(() -> new NotFoundException(ErrorMessage.SELECTION_NOT_FOUND));
+
+        if (!foodSelection.getUser().getId().equals(authUser.id())) {
+            throw new UnauthorizedException(ErrorMessage.INVALID_REQUEST);
         }
 
         LocalDate today = LocalDate.now(clock);
 
-        long deleted = foodSelectionRepository.deleteByIdAndUser_IdAndSelectedDate(
-                selectionId, authUser.id(), today
-        );
-
-        if (deleted == 0) {
+        if (!foodSelection.getSelectedDate().equals(today)) {
             throw new BadRequestException(ErrorMessage.TODAY_ONLY_DELETABLE);
         }
+
+        foodSelectionRepository.delete(foodSelection);
     }
 
     private FoodSelectionResponse toResponse(FoodSelection foodSelection, LocalDate today) {
