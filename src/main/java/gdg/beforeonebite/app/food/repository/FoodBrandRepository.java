@@ -19,9 +19,10 @@ public interface FoodBrandRepository extends JpaRepository<FoodBrand, Long> {
                 select fb from FoodBrand fb
                 join fetch fb.food f
                 left join fetch fb.brand b
-                where f.foodName = :foodName
+                where replace(f.foodName, ' ', '') = :foodName
+                order by fb.calories asc
             """)
-    Optional<FoodBrand> findOneWithFoodAndBrandByFoodName(String foodName);
+    Optional<FoodBrand> findByFoodNameOrderByCaloriesAsc(String foodName, Pageable pageable);
 
     @Query("""
                 select fb from FoodBrand fb

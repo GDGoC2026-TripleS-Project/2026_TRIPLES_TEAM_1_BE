@@ -120,7 +120,12 @@ public class FoodSearchService {
         String normalized = normalize(foodName);
 
         return foodBrandRepository
-                .findOneWithFoodAndBrandByFoodName(normalized)
+                .findByFoodNameOrderByCaloriesAsc(
+                        normalized,
+                        PageRequest.of(0, 1)
+                )
+                .stream()
+                .findFirst()
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.FOOD_NOT_EXIST));
     }
 }
