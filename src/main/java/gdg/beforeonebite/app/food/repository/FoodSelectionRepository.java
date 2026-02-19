@@ -22,10 +22,10 @@ public interface FoodSelectionRepository extends JpaRepository<FoodSelection, Lo
             """)
     List<FoodSelection> findAllWithFoodBrandByUserAndDateFrom(Long userId, LocalDate fromDate);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
                 delete from FoodSelection fs
                 where fs.selectedDate < :cutoffDate
             """)
-    void deleteBySelectedDateBefore(@Param("cutoffDate") LocalDate cutoffDate);
+    int deleteBySelectedDateBefore(@Param("cutoffDate") LocalDate cutoffDate);
 }

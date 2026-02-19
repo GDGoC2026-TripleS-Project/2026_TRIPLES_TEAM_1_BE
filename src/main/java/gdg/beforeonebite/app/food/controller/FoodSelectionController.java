@@ -2,6 +2,8 @@ package gdg.beforeonebite.app.food.controller;
 
 import gdg.beforeonebite.app.auth.domain.AuthUser;
 import gdg.beforeonebite.app.food.dto.FoodSelectionCreateRequest;
+import gdg.beforeonebite.app.food.dto.FoodSelectionCreateResponse;
+import gdg.beforeonebite.app.food.dto.FoodSelectionPageResponse;
 import gdg.beforeonebite.app.food.dto.FoodSelectionResponse;
 import gdg.beforeonebite.app.food.service.FoodSelectionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,9 +29,8 @@ public class FoodSelectionController {
     private final FoodSelectionService foodSelectionService;
 
     @PostMapping
-    public ResponseEntity<Void> select(@AuthenticationPrincipal AuthUser authUser, @RequestBody FoodSelectionCreateRequest request) {
-        foodSelectionService.selectFood(authUser, request.foodBrandId());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<FoodSelectionCreateResponse> select(@AuthenticationPrincipal AuthUser authUser, @RequestBody FoodSelectionCreateRequest request) {
+        return ResponseEntity.ok(foodSelectionService.selectFood(authUser, request.foodBrandId()));
     }
 
     @GetMapping
@@ -41,5 +42,10 @@ public class FoodSelectionController {
     public ResponseEntity<Void> deleteToday(@AuthenticationPrincipal AuthUser authUser, @PathVariable Long selectionId) {
         foodSelectionService.deleteTodaySelection(authUser, selectionId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<FoodSelectionPageResponse> page(@AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(foodSelectionService.getSelectionPage(authUser));
     }
 }
