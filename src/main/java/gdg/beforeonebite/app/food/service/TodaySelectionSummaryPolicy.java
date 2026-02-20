@@ -7,19 +7,19 @@ public class TodaySelectionSummaryPolicy {
 
     public TodaySummary from(double totalCalories) {
         if (totalCalories <= 150) {
-            return new TodaySummary("오늘은 가볍게 선택했어요", 10);
+            return new TodaySummary("오늘은 가볍게 선택했어요.\n" + "부담 없이 넘어간 선택이에요.", 10);
         }
         if (totalCalories <= 300) {
-            return new TodaySummary("오늘은 무리 없는 선택이었어요", 15);
+            return new TodaySummary("오늘은 무리 없는 선택이었어요.\n" + "일상 흐름을 해치지 않는 정도예요.", 15);
         }
         if (totalCalories <= 500) {
-            return new TodaySummary("오늘의 선택이 조금은 느껴져요", 20);
+            return new TodaySummary("오늘의 선택이 조금은 느껴져요.\n" + "여기서부터는 선택의 무게가 생겨요.", 20);
         }
         if (totalCalories <= 700) {
-            return new TodaySummary("오늘 선택의 비중이 꽤 있어요", 25);
+            return new TodaySummary("오늘 선택의 비중이 꽤 있어요.\n" + "이 정도면 한 번쯤 돌아볼 만해요.", 25);
         }
 
-        return new TodaySummary("오늘 선택이 큰 비중을 차지해요", 30);
+        return new TodaySummary("오늘 선택이 큰 비중을 차지해요.\n" + "오늘의 흐름을 바꾼 선택이에요.", 30);
     }
 
     public record TodaySummary(String message, int walkingMinutes) {
