@@ -38,8 +38,6 @@ public class FoodController {
                     음식명을 입력하면 해당 음식의 칼로리 정보, 활동시간, 걷기시간 및 문구를 반환합니다.
                     
                     띄어쓰기는 자동으로 제거되어 검색됩니다.
-                    
-                    토큰을 넣고 API를 호출했을 경우, 자동적으로 검색 기록에 저장됩니다.
                     """
     )
     @ApiResponses({
@@ -49,13 +47,14 @@ public class FoodController {
             @ApiResponse(responseCode = "500", description = "서버 에러, 관리자에게 문의")
     })
     public ResponseEntity<FoodSearchResponse> searchFood(
-            @Parameter(hidden = true)
-            @AuthenticationPrincipal AuthUser authUser,
+//            @Parameter(hidden = true)
+//            @AuthenticationPrincipal AuthUser authUser,
 
             @Parameter(description = "검색할 음식명", example = "치즈버거")
             @RequestParam String keyword
     ) {
-        return ResponseEntity.ok(foodSearchService.search(authUser, keyword));
+//        return ResponseEntity.ok(foodSearchService.search(authUser, keyword));
+        return ResponseEntity.ok(foodSearchService.search(keyword));
     }
 
     @GetMapping("/recommend/best")
