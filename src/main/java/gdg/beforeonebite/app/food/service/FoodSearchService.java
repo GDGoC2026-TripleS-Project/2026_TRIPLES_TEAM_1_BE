@@ -32,7 +32,7 @@ public class FoodSearchService {
     private final SearchHistoryService searchHistoryService;
 
     @Transactional
-    public FoodSearchResponse search(AuthUser authUser, String keyword) {
+    public FoodSearchResponse search(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             throw new BadRequestException(ErrorMessage.INVALID_SEARCH_KEYWORD);
         }
@@ -41,7 +41,7 @@ public class FoodSearchService {
 
         CalorieGuideDto guideDto = calorieGuidePolicy.from(foodBrand.getCalories());
 
-        searchHistoryService.saveSearchHistory(authUser, foodBrand.getFood());
+//        searchHistoryService.saveSearchHistory(authUser, foodBrand.getFood());
 
         return FoodSearchResponse.from(foodBrand, guideDto);
     }
