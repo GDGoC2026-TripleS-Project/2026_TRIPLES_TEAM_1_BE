@@ -7,6 +7,7 @@ import gdg.beforeonebite.app.food.dto.CalorieGuideDto;
 import gdg.beforeonebite.app.food.dto.FoodBestCompareResponse;
 import gdg.beforeonebite.app.food.dto.FoodRecommendDto;
 import gdg.beforeonebite.app.food.dto.FoodRecommendationListResponse;
+import gdg.beforeonebite.app.food.dto.FoodSearchListResponse;
 import gdg.beforeonebite.app.food.dto.FoodSearchResponse;
 import gdg.beforeonebite.app.food.repository.FoodBrandRepository;
 import gdg.beforeonebite.global.exception.BadRequestException;
@@ -44,6 +45,33 @@ public class FoodSearchService {
 
         return FoodSearchResponse.from(foodBrand, guideDto);
     }
+
+    @Transactional(readOnly = true)
+    public FoodSearchListResponse searchList(AuthUser authUser, String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            throw new BadRequestException(ErrorMessage.INVALID_SEARCH_KEYWORD);
+        }
+
+        String normalized = normalize(keyword); // 공백 제거
+
+        List<FoodBrand> results = foodBrandRepository.searchWithFoodAndBrandByKeyword(normalized);
+
+        if (results.isEmpty()) {
+            throw new NotFoundException(ErrorMessage.FOOD_NOT_EXIST);
+        }
+
+        searchHistoryService.saveSearchHistory(authUser, results.getFirst().getFood());
+
+        List<FoodSearchResponse> items = results.stream()
+                .map(fb -> FoodSearchResponse.from(fb, calorieGuidePolicy.from(fb.getCalories())))
+                .toList();
+
+        return FoodSearchListResponse.builder()
+                .keyword(keyword)
+                .items(items)
+                .build();
+    }
+
 
     private String normalize(String keyword) {
         return keyword.replaceAll("\\s+", "");
