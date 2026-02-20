@@ -5,6 +5,7 @@ import gdg.beforeonebite.app.food.domain.FoodBrand;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -65,4 +66,14 @@ public interface FoodBrandRepository extends JpaRepository<FoodBrand, Long> {
                 where fb.id = :id
             """)
     Optional<FoodBrand> findOneWithFoodAndBrandById(Long id);
+
+    @Query("""
+    select fb from FoodBrand fb
+    join fetch fb.food f
+    left join fetch fb.brand b
+    where lower(replace(f.foodName, ' ', '')) like lower(concat('%', :keyword, '%'))
+    order by fb.calories asc
+""")
+    List<FoodBrand> searchWithFoodAndBrandByKeyword(@Param("keyword") String keyword);
+
 }

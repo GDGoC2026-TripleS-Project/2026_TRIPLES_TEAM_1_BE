@@ -3,6 +3,7 @@ package gdg.beforeonebite.app.food.controller;
 import gdg.beforeonebite.app.auth.domain.AuthUser;
 import gdg.beforeonebite.app.food.dto.FoodBestCompareResponse;
 import gdg.beforeonebite.app.food.dto.FoodRecommendationListResponse;
+import gdg.beforeonebite.app.food.dto.FoodSearchListResponse;
 import gdg.beforeonebite.app.food.dto.FoodSearchResponse;
 import gdg.beforeonebite.app.food.service.FoodSearchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -93,5 +94,10 @@ public class FoodController {
     })
     public ResponseEntity<FoodRecommendationListResponse> recommendationList(@RequestParam Long foodBrandId) {
         return ResponseEntity.ok(foodSearchService.getRecommendationList(foodBrandId));
+    }
+
+    @GetMapping("/search/list")
+    public ResponseEntity<FoodSearchListResponse> searchFoodList(@AuthenticationPrincipal AuthUser authUser, @RequestParam String keyword) {
+        return ResponseEntity.ok(foodSearchService.searchList(authUser, keyword));
     }
 }
