@@ -31,4 +31,6 @@ public interface SearchHistoryRepository extends JpaRepository<SearchHistory, Lo
         where sh.searchedAt < :fiveDaysAgo
     """)
     int deleteOldSearchHistory(@Param("fiveDaysAgo") LocalDateTime fiveDaysAgo);
+
+    List<SearchHistory> findByUserIdOrderBySearchedAtDesc(Long userId);
 }
