@@ -7,7 +7,6 @@ import gdg.beforeonebite.app.food.dto.CalorieGuideDto;
 import gdg.beforeonebite.app.food.dto.FoodBestCompareResponse;
 import gdg.beforeonebite.app.food.dto.FoodRecommendDto;
 import gdg.beforeonebite.app.food.dto.FoodRecommendationListResponse;
-import gdg.beforeonebite.app.food.dto.FoodSearchListResponse;
 import gdg.beforeonebite.app.food.dto.FoodSearchResponse;
 import gdg.beforeonebite.app.food.repository.FoodBrandRepository;
 import gdg.beforeonebite.global.exception.BadRequestException;
@@ -37,39 +36,25 @@ public class FoodSearchService {
             throw new BadRequestException(ErrorMessage.INVALID_SEARCH_KEYWORD);
         }
 
-        FoodBrand foodBrand = findFoodBrandFromFoodName(keyword);
+        String normalized = normalize(keyword);
 
-        CalorieGuideDto guideDto = calorieGuidePolicy.from(foodBrand.getCalories());
+        List<FoodBrand> exact = foodBrandRepository.findExactMatches(normalized, PageRequest.of(0, 1));
 
-//        searchHistoryService.saveSearchHistory(authUser, foodBrand.getFood());
-
-        return FoodSearchResponse.from(foodBrand, guideDto);
-    }
-
-    @Transactional(readOnly = true)
-    public FoodSearchListResponse searchList(AuthUser authUser, String keyword) {
-        if (keyword == null || keyword.isBlank()) {
-            throw new BadRequestException(ErrorMessage.INVALID_SEARCH_KEYWORD);
+        if (!exact.isEmpty()) {
+            FoodBrand picked = exact.getFirst();
+            CalorieGuideDto guide = calorieGuidePolicy.from(picked.getCalories());
+            return FoodSearchResponse.from(picked, guide);
         }
 
-        String normalized = normalize(keyword); // 공백 제거
-
-        List<FoodBrand> results = foodBrandRepository.searchWithFoodAndBrandByKeyword(normalized);
-
-        if (results.isEmpty()) {
+        List<FoodBrand> candidates = foodBrandRepository.findContainsMatches(normalized, PageRequest.of(0, 50));
+        if (candidates.isEmpty()) {
             throw new NotFoundException(ErrorMessage.FOOD_NOT_EXIST);
         }
 
-        searchHistoryService.saveSearchHistory(authUser, results.getFirst().getFood());
+        FoodBrand picked = candidates.get(candidates.size() / 2);
 
-        List<FoodSearchResponse> items = results.stream()
-                .map(fb -> FoodSearchResponse.from(fb, calorieGuidePolicy.from(fb.getCalories())))
-                .toList();
-
-        return FoodSearchListResponse.builder()
-                .keyword(keyword)
-                .items(items)
-                .build();
+        CalorieGuideDto guide = calorieGuidePolicy.from(picked.getCalories());
+        return FoodSearchResponse.from(picked, guide);
     }
 
 
@@ -130,14 +115,33 @@ public class FoodSearchService {
         double calories = current.getCalories();
         Long excludeId = current.getId();
 
-        PageRequest pageRequest = PageRequest.of(0, limit);
+        PageRequest page = PageRequest.of(0, limit);
+
+        List<FoodBrand> result = new ArrayList<>();
 
         if (current.getBrand() != null) {
-            return foodBrandRepository.findLighterCandidatesWithBrand(current.getBrand(), category, calories, excludeId, pageRequest);
+            result.addAll(foodBrandRepository.findLighterCandidatesWithBrand(
+                    current.getBrand(), category, calories, excludeId, page
+            ));
         }
 
-        return foodBrandRepository.findLighterCandidatesNoBrand(category, calories, excludeId, pageRequest);
+        if (result.size() < limit) {
+            int remain = limit - result.size();
+
+            List<FoodBrand> more = foodBrandRepository.findLighterCandidatesNoBrand(
+                    category, calories, excludeId, PageRequest.of(0, remain + 10)
+            );
+
+            for (FoodBrand fb : more) {
+                if (result.size() >= limit) break;
+                boolean duplicated = result.stream().anyMatch(x -> x.getId().equals(fb.getId()));
+                if (!duplicated) result.add(fb);
+            }
+        }
+
+        return result.size() > limit ? result.subList(0, limit) : result;
     }
+
 
     private FoodRecommendDto recommendFood(FoodBrand foodBrand) {
         CalorieGuideDto guide = calorieGuidePolicy.from(foodBrand.getCalories());

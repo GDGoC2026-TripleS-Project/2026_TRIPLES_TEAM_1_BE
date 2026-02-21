@@ -1,9 +1,7 @@
 package gdg.beforeonebite.app.food.controller;
 
-import gdg.beforeonebite.app.auth.domain.AuthUser;
 import gdg.beforeonebite.app.food.dto.FoodBestCompareResponse;
 import gdg.beforeonebite.app.food.dto.FoodRecommendationListResponse;
-import gdg.beforeonebite.app.food.dto.FoodSearchListResponse;
 import gdg.beforeonebite.app.food.dto.FoodSearchResponse;
 import gdg.beforeonebite.app.food.service.FoodSearchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -47,13 +44,9 @@ public class FoodController {
             @ApiResponse(responseCode = "500", description = "서버 에러, 관리자에게 문의")
     })
     public ResponseEntity<FoodSearchResponse> searchFood(
-//            @Parameter(hidden = true)
-//            @AuthenticationPrincipal AuthUser authUser,
-
             @Parameter(description = "검색할 음식명", example = "치즈버거")
             @RequestParam String keyword
     ) {
-//        return ResponseEntity.ok(foodSearchService.search(authUser, keyword));
         return ResponseEntity.ok(foodSearchService.search(keyword));
     }
 
@@ -93,10 +86,5 @@ public class FoodController {
     })
     public ResponseEntity<FoodRecommendationListResponse> recommendationList(@RequestParam Long foodBrandId) {
         return ResponseEntity.ok(foodSearchService.getRecommendationList(foodBrandId));
-    }
-
-    @GetMapping("/search/list")
-    public ResponseEntity<FoodSearchListResponse> searchFoodList(@AuthenticationPrincipal AuthUser authUser, @RequestParam String keyword) {
-        return ResponseEntity.ok(foodSearchService.searchList(authUser, keyword));
     }
 }

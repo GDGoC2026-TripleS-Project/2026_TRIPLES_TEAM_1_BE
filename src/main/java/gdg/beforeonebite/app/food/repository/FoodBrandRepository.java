@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface FoodBrandRepository extends JpaRepository<FoodBrand, Long> {
-    Optional<FoodBrand> findByFood_FoodName(String foodName);
 
     List<FoodBrand> findAllByFood_IdInAndBrand_IdIn(Set<Long> foodIds, Set<Long> brandIds);
 
@@ -68,12 +67,20 @@ public interface FoodBrandRepository extends JpaRepository<FoodBrand, Long> {
     Optional<FoodBrand> findOneWithFoodAndBrandById(Long id);
 
     @Query("""
-    select fb from FoodBrand fb
-    join fetch fb.food f
-    left join fetch fb.brand b
-    where lower(replace(f.foodName, ' ', '')) like lower(concat('%', :keyword, '%'))
-    order by fb.calories asc
-""")
-    List<FoodBrand> searchWithFoodAndBrandByKeyword(@Param("keyword") String keyword);
+                select fb from FoodBrand fb
+                join fetch fb.food f
+                left join fetch fb.brand b
+                where lower(replace(f.foodName, ' ', '')) = lower(:keyword)
+                order by fb.calories desc, fb.id asc
+            """)
+    List<FoodBrand> findExactMatches(@Param("keyword") String keyword, Pageable pageable);
 
+    @Query("""
+                select fb from FoodBrand fb
+                join fetch fb.food f
+                left join fetch fb.brand b
+                where lower(replace(f.foodName, ' ', '')) like lower(concat('%', :keyword, '%'))
+                order by fb.calories asc, fb.id asc
+            """)
+    List<FoodBrand> findContainsMatches(@Param("keyword") String keyword, Pageable pageable);
 }
