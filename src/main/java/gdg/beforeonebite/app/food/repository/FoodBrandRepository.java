@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface FoodBrandRepository extends JpaRepository<FoodBrand, Long> {
-    Optional<FoodBrand> findByFood_FoodName(String foodName);
 
     List<FoodBrand> findAllByFood_IdInAndBrand_IdIn(Set<Long> foodIds, Set<Long> brandIds);
 
